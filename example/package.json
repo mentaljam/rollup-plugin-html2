@@ -1,0 +1,17 @@
+{
+  "name": "rollup-plugin-html2-example",
+  "version": "1.0.0",
+  "description": "Usage example for the rollup-plugin-html2.",
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "author": "Petr Tsymbarovich <petr@tsymbarovich.ru>",
+  "license": "MIT",
+  "devDependencies": {
+    "rollup": "^1.12.3",
+    "rollup-plugin-html2": "../"
+  },
+  "dependencies": {
+    "rollup-plugin-postcss": "^2.0.3"
+  }
+}

@@ -1,0 +1,10 @@
+body {
+  margin: 0;
+  height: calc(100vh - 1px);
+  display: flex;
+}
+
+#root {
+  margin: auto;
+  font-size: 2em;
+}

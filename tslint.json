@@ -1,0 +1,15 @@
+{
+  "extends": [
+    "tslint:recommended",
+    "tslint-config-prettier"
+  ],
+  "linterOptions": {
+    "exclude": [
+      "node_modules/**/*.ts"
+    ]
+  },
+  "rules": {
+    "linebreak-style": [true, "LF"],
+    "variable-name": [true, "allow-leading-underscore"]
+  }
+}
