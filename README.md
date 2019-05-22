@@ -124,13 +124,15 @@ meta: {
 ```js
 {
   file: string
+  type?: undefined | 'css' | 'js'
   pos: 'before' | 'after'
 }[]
 ```
 
 An array of additional files that will be injected to the output HTML document. Only CSS and JS files
-are accepted. The `pos` property points when the file is inserted: before processing the budnled files
-or after.
+are accepted. The optional `type` property points which type of file is injected. If type is `undefined`
+then it is detected based on the file extension. The `pos` property points when the file is inserted:
+before processing the budnled files or after.
 
 ##### Example
 

@@ -25,6 +25,11 @@ const enum Inject {
   body = 'body',
 }
 
+const enum InjectType {
+  css = 'css',
+  js = 'js',
+}
+
 const enum ExternalPosition {
   before = 'before',
   after = 'after',
@@ -32,6 +37,7 @@ const enum ExternalPosition {
 
 interface IExternal {
   file: string
+  type?: InjectType
   pos: ExternalPosition
 }
 
@@ -177,15 +183,15 @@ export default ({
       }
     }
 
-    const injectCSSandJS = (fileName: string, pos: Inject | undefined = undefined) => {
+    const injectCSSandJS = (fileName: string, type: string, pos: Inject | undefined = undefined) => {
       const cssParent = pos !== Inject.body ? head : body
       const jsParent = pos !== Inject.head ? body : head
-      switch (path.extname(fileName)) {
-        case '.css':
+      switch (type) {
+        case InjectType.css:
           addNewLine(cssParent)
           cssParent.appendChild(new HTMLElement('link', {}, `rel="stylesheet" href="${fileName}"`))
           break
-        case '.js':
+        case InjectType.js:
           addNewLine(jsParent)
           jsParent.appendChild(new HTMLElement('script', {}, `src="${fileName}"`))
           break
@@ -198,7 +204,7 @@ export default ({
       (pos) => {
         for (const external of externals) {
           if (external.pos === pos) {
-            injectCSSandJS(external.file)
+            injectCSSandJS(external.file, external.type || path.extname(external.file).slice(1))
           }
         }
       }
@@ -211,7 +217,7 @@ export default ({
 
     // Inject generated assets
     if (inject !== false) {
-      Object.values(bundle).forEach(({fileName}) => injectCSSandJS(fileName, inject))
+      Object.values(bundle).forEach(({fileName}) => injectCSSandJS(fileName, path.extname(fileName).slice(1), inject))
     }
 
     // Inject externals after
