@@ -123,11 +123,10 @@ export default ({
   },
 
   generateBundle(_output, bundle) {
-    if (!this.cache.get<boolean>(Cache.isHTML)) {
-      template = fs.readFileSync(template).toString()
-    }
+    const data = this.cache.get<boolean>(Cache.isHTML) ?
+      template : fs.readFileSync(template).toString()
 
-    const doc = parse(template) as HTMLElement & {valid: boolean}
+    const doc = parse(data) as HTMLElement & {valid: boolean}
     if (!doc.valid) {
       this.error('Error parsing template')
     }
