@@ -1,3 +1,5 @@
 import './index.css'
 
-document.getElementById('root').innerText = 'JS is working!'
+import('./lib').then(mod => {
+  (mod && mod.default)()
+})

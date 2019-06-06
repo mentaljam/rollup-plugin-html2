@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import {minify, Options as MinifyOptions} from 'html-minifier'
 import {HTMLElement, parse, TextNode} from 'node-html-parser'
 import * as path from 'path'
-import {Plugin} from 'rollup'
+import {OutputChunk, Plugin} from 'rollup'
 
 
 const getChildElement = (node: HTMLElement, tag: string, append = true) => {
@@ -214,9 +214,23 @@ export default ({
     // Inject externals before
     processExternals(ExternalPosition.before)
 
-    // Inject generated assets
+    // Inject generated files
     if (inject !== false) {
-      Object.values(bundle).forEach(({fileName}) => injectCSSandJS(fileName, path.extname(fileName).slice(1), inject))
+      const files = Object.values(bundle)
+      // First of all get entries
+      const entries = files.reduce((prev, cur) => {
+        if ((cur as OutputChunk).isEntry) {
+          prev.add(path.parse(cur.fileName).name)
+        }
+        return prev
+      }, new Set<string>())
+      // Now process all files and inject only entries
+      files.forEach(({fileName}) => {
+        const parsed = path.parse(fileName)
+        if (entries.has(parsed.name)) {
+          injectCSSandJS(fileName, parsed.ext.slice(1), inject)
+        }
+      })
     }
 
     // Inject externals after
