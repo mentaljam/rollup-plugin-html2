@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import {minify, Options as MinifyOptions} from 'html-minifier'
 import {HTMLElement, parse, TextNode} from 'node-html-parser'
 import * as path from 'path'
-import {OutputChunk, Plugin} from 'rollup'
+import {OutputAsset, OutputChunk, Plugin} from 'rollup'
 
 
 const getChildElement = (node: HTMLElement, tag: string, append = true) => {
@@ -51,11 +51,57 @@ interface IPluginOptions {
   favicon?: string
   meta?: {[name: string]: string}
   externals?: IExternal[]
+  preload?: string[] | Set<string>
   minify?: false | MinifyOptions
 }
 
 const enum Cache {
   isHTML = 'isHTML',
+}
+
+const normalizePreload = (preload?: string[] | Set<string>) => {
+  if (!preload) {
+    preload = []
+  }
+  if (preload instanceof Array) {
+    preload = new Set(preload)
+  }
+  return preload
+}
+
+const extensionToType = (ext: InjectType | string) => {
+  switch (ext) {
+    case 'css': return 'style'
+    case 'js' : return 'script'
+    default   : return null
+  }
+}
+
+interface IEntryMap {
+  [chunk: string]: string
+}
+
+interface IReducesBundle {
+  entries: IEntryMap
+  dynamicEntries: IEntryMap
+}
+
+const isChunk = (item: OutputAsset | OutputChunk): item is OutputChunk => {
+  return !(item as OutputAsset).isAsset
+}
+
+const bundleReducer = (prev: IReducesBundle, cur: OutputAsset | OutputChunk) => {
+  if (isChunk(cur)) {
+    // Use full name with possible hash and without extension to process
+    // possible CSS files and other assets with same name of entry
+    const {name} = path.parse(cur.fileName)
+    if (cur.isEntry) {
+      prev.entries[name] = cur.name
+    } else if (cur.isDynamicEntry) {
+      prev.dynamicEntries[name] = cur.name
+    }
+  }
+  return prev
 }
 
 export default ({
@@ -66,6 +112,7 @@ export default ({
   favicon,
   meta,
   externals,
+  preload,
   minify: minifyOptions,
   ...options
 }: IPluginOptions): Plugin => ({
@@ -218,17 +265,23 @@ export default ({
     if (inject !== false) {
       const files = Object.values(bundle)
       // First of all get entries
-      const entries = files.reduce((prev, cur) => {
-        if ((cur as OutputChunk).isEntry) {
-          prev.add(path.parse(cur.fileName).name)
-        }
-        return prev
-      }, new Set<string>())
-      // Now process all files and inject only entries
+      const {entries, dynamicEntries} = files.reduce(bundleReducer, {
+        dynamicEntries: {} as IEntryMap,
+        entries: {} as IEntryMap,
+      })
+      // Now process all files and inject only entries and preload files
+      preload = normalizePreload(preload)
       files.forEach(({fileName}) => {
-        const parsed = path.parse(fileName)
-        if (entries.has(parsed.name)) {
-          injectCSSandJS(fileName, parsed.ext.slice(1), inject)
+        const {name, ext} = path.parse(fileName)
+        const injectType = ext.slice(1)
+        if (name in entries) {
+          injectCSSandJS(fileName, injectType, inject)
+        } else if (name in dynamicEntries && (preload as Set<string>).has(dynamicEntries[name])) {
+          const linkType = extensionToType(injectType)
+          if (linkType) {
+            addNewLine(head)
+            head.appendChild(new HTMLElement('link', {}, `rel="preload" href="${fileName}" as="${linkType}"`))
+          }
         }
       })
     }

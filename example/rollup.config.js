@@ -23,6 +23,7 @@ export default {
         file: 'https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css',
         pos: 'before',
       }],
+      preload: ['lib'],
       minify: {
         removeComments: true,
         collapseWhitespace: true,
