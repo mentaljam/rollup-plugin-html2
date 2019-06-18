@@ -167,6 +167,7 @@ export default ({
         this.error('Could\'t write the generated HTML to the source template, define one of the options: `file`, `output.file` or `output.dir`')
       }
     }
+    return null
   },
 
   generateBundle(_output, bundle) {

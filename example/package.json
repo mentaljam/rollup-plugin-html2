@@ -8,10 +8,8 @@
   "author": "Petr Tsymbarovich <petr@tsymbarovich.ru>",
   "license": "MIT",
   "devDependencies": {
-    "rollup": "^1.12.3",
-    "rollup-plugin-html2": "../"
-  },
-  "dependencies": {
+    "rollup": "^1.15.6",
+    "rollup-plugin-html2": "../",
     "rollup-plugin-postcss": "^2.0.3"
   }
 }
