@@ -1,6 +1,6 @@
 {
   "name": "rollup-plugin-html2",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "Rollup plugin to zip up emitted files.",
   "homepage": "https://github.com/mentaljam/rollup-plugin-html2",
   "repository": {
