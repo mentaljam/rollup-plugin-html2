@@ -227,6 +227,7 @@ export default ({
         fileName,
         isAsset: true,
         source: fs.readFileSync(favicon),
+        type: 'asset',
       }
     }
 
@@ -300,6 +301,7 @@ export default ({
       fileName: file!,
       isAsset: true,
       source,
+      type: 'asset',
     }
   },
 })
