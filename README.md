@@ -143,6 +143,29 @@ externals: [{
 }]
 ```
 
+### preload
+
+```js
+string[] | Set<string>
+```
+
+An array or a set of names of dynamic chunks that will be injected to the output HTML document
+as preload links.
+
+##### Example
+
+```js
+preload: ['lib'],
+```
+
+### modules
+
+```js
+boolean | undefined
+```
+
+Inject entries as modules. This only works if the output format supports modules.
+
 ### minify
 
 ```js
@@ -166,4 +189,3 @@ minify: {
 ## License
 
 [MIT](LICENSE) © [Petr Tsymbarovich](mailto:petr@tsymbarovich.ru)
-
