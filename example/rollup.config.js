@@ -7,7 +7,7 @@ export default {
   output: {
     dir: 'dist',
     entryFileNames: '[name]-[hash].js',
-    format: 'es',
+    format: 'esm',
   },
   plugins: [
     postcss({

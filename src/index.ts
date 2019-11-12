@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import {minify, Options as MinifyOptions} from 'html-minifier'
 import {HTMLElement, parse, TextNode} from 'node-html-parser'
 import * as path from 'path'
-import {OutputAsset, OutputChunk, Plugin} from 'rollup'
+import {ModuleFormat, OutputAsset, OutputChunk, Plugin} from 'rollup'
 
 
 const getChildElement = (node: HTMLElement, tag: string, append = true) => {
@@ -52,6 +52,7 @@ interface IPluginOptions {
   meta?: {[name: string]: string}
   externals?: IExternal[]
   preload?: string[] | Set<string>
+  modules?: boolean
   minify?: false | MinifyOptions
 }
 
@@ -104,6 +105,12 @@ const bundleReducer = (prev: IReducesBundle, cur: OutputAsset | OutputChunk) => 
   return prev
 }
 
+const formatSupportsModules = (f?: ModuleFormat) => (
+     f === 'es'
+  || f === 'esm'
+  || f === 'module'
+)
+
 export default ({
   template,
   file,
@@ -113,6 +120,7 @@ export default ({
   meta,
   externals,
   preload,
+  modules,
   minify: minifyOptions,
   ...options
 }: IPluginOptions): Plugin => ({
@@ -149,10 +157,15 @@ export default ({
       }
     }
 
+    const typeofmodules = typeof modules
+    if (typeofmodules !== 'boolean' && typeofmodules !== 'undefined') {
+      this.error('Invalid `modules` argument: ' + JSON.stringify(modules))
+    }
+
     Object.keys(options).forEach(o => this.warn(`Ignoring unknown option "${o}"`))
   },
 
-  outputOptions({dir, file: bundleFile}) {
+  outputOptions({dir, file: bundleFile, format}) {
     if (!file) {
       let distDir = process.cwd()
       if (dir) {
@@ -166,6 +179,10 @@ export default ({
       if (file === path.resolve(template)) {
         this.error('Could\'t write the generated HTML to the source template, define one of the options: `file`, `output.file` or `output.dir`')
       }
+    }
+    if (modules && !formatSupportsModules(format)) {
+      this.error(`The modules option is set to true but the output.format is ${format}, \
+consider to use the esm format or switch off the option`)
     }
     return null
   },
@@ -241,7 +258,8 @@ export default ({
           break
         case InjectType.js:
           addNewLine(jsParent)
-          jsParent.appendChild(new HTMLElement('script', {}, `src="${fileName}"`))
+          const typeModule = modules ? 'type="module" ' : ''
+          jsParent.appendChild(new HTMLElement('script', {}, `${typeModule}src="${fileName}"`))     
           break
         default:
           break
