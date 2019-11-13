@@ -31,11 +31,11 @@
   "author": "Petr Tsymbarovich <petr@tsymbarovich.ru>",
   "license": "MIT",
   "dependencies": {
-    "@types/html-minifier": "^3.5.3",
     "html-minifier": "^4.0.0",
     "node-html-parser": "^1.1.16"
   },
   "devDependencies": {
+    "@types/html-minifier": "^3.5.3",
     "rollup": "^1.27.0",
     "rollup-plugin-tslint": "^0.2.2",
     "rollup-plugin-typescript2": "^0.25.2",
@@ -44,6 +44,7 @@
     "typescript": "^3.7.2"
   },
   "peerDependencies": {
+    "@types/html-minifier": "^3.5.3",
     "rollup": ">=1.25.0"
   }
 }
