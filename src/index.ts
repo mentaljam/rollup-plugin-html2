@@ -254,12 +254,12 @@ consider to use the esm format or switch off the option`)
       switch (type) {
         case InjectType.css:
           addNewLine(cssParent)
-          cssParent.appendChild(new HTMLElement('link', {}, `rel="stylesheet" href="${fileName}"`))
+          cssParent.appendChild(new HTMLElement('link', {}, `rel="stylesheet" href="/${fileName}"`))
           break
         case InjectType.js:
           addNewLine(jsParent)
           const typeModule = modules ? 'type="module" ' : ''
-          jsParent.appendChild(new HTMLElement('script', {}, `${typeModule}src="${fileName}"`))     
+          jsParent.appendChild(new HTMLElement('script', {}, `${typeModule}src="/${fileName}"`))     
           break
         default:
           break
