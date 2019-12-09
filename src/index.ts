@@ -136,11 +136,11 @@ const injectCSSandJSFactory = (
     if (type === InjectType.css) {
       const parent = pos === Inject.body ? body : head
       addNewLine(parent)
-      parent.appendChild(new HTMLElement('link', {}, `rel="stylesheet" ${cors}href="/${fileName}"`))
+      parent.appendChild(new HTMLElement('link', {}, `rel="stylesheet" ${cors}href="${fileName}"`))
     } else {
       const parent = pos === Inject.head ? head : body
       addNewLine(parent)
-      parent.appendChild(new HTMLElement('script', {}, `${typeModule}${cors}src="/${fileName}"`))    
+      parent.appendChild(new HTMLElement('script', {}, `${typeModule}${cors}src="${fileName}"`))    
     }
   }
 }
@@ -244,8 +244,9 @@ consider to use the esm format or switch off the option`)
   },
 
   generateBundle(_output, bundle) {
-    const data = this.cache.get<boolean>(Cache.isHTML) ?
-      template : fs.readFileSync(template).toString()
+    const data = this.cache.get<boolean>(Cache.isHTML)
+      ? template
+      : fs.readFileSync(template).toString()
 
     const doc = parse(data) as HTMLElement & {valid: boolean}
     if (!doc.valid) {
@@ -324,12 +325,12 @@ consider to use the esm format or switch off the option`)
         const {name, ext} = path.parse(fileName)
         const injectType = ext.slice(1)
         if (name in entries) {
-          injectCSSandJS(fileName, injectType, inject)
+          injectCSSandJS('/' + fileName, injectType, inject)
         } else if (name in dynamicEntries && (preload as Set<string>).has(dynamicEntries[name])) {
           const linkType = extensionToType(injectType)
           if (linkType) {
             addNewLine(head)
-            head.appendChild(new HTMLElement('link', {}, `rel="preload" href="${fileName}" as="${linkType}"`))
+            head.appendChild(new HTMLElement('link', {}, `rel="preload" href="/${fileName}" as="${linkType}"`))
           }
         }
       })
