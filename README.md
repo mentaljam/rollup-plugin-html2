@@ -123,6 +123,7 @@ meta: {
 
 ```js
 {
+  crossorigin?: 'anonymous' | 'use-credentials'
   file: string
   type?: undefined | 'css' | 'js'
   pos: 'before' | 'after'
@@ -132,7 +133,8 @@ meta: {
 An array of additional files that will be injected to the output HTML document. Only CSS and JS files
 are accepted. The optional `type` property points which type of file is injected. If type is `undefined`
 then it is detected based on the file extension. The `pos` property points when the file is inserted:
-before processing the budnled files or after.
+before processing the bundled files or after. The optional `crossorigin` property points whether to place
+the CORS attribute to the generated tag.
 
 ##### Example
 

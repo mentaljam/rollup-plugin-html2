@@ -30,18 +30,22 @@ const enum InjectType {
   js = 'js',
 }
 
-const enum ExternalPosition {
+enum ExternalPosition {
   before = 'before',
   after = 'after',
 }
 
+enum Crossorigin {
+  anonymous = 'anonymous',
+  usecredentials = 'use-credentials',
+}
+
 interface IExternal {
+  crossorigin?: Crossorigin
   file: string
   type?: InjectType
   pos: ExternalPosition
 }
-
-type ExtrenalsProcessor = (pos: ExternalPosition) => void
 
 interface IPluginOptions {
   template: string
@@ -111,6 +115,55 @@ const formatSupportsModules = (f?: ModuleFormat) => (
   || f === 'module'
 )
 
+const checkEnum = <T extends {}>(enumobj: T, val?: string) => (
+  !val || Object.values(enumobj).includes(val)
+)
+
+const injectCSSandJSFactory = (
+  head: HTMLElement,
+  body: HTMLElement,
+  modules?: boolean,
+) => {
+  const typeModule = modules ? 'type="module" ' : ''
+
+  return (
+    fileName: string,
+    type: InjectType | string,
+    pos?: Inject,
+    crossorigin?: Crossorigin,
+  ) => {
+    const cors = crossorigin ? `crossorigin="${crossorigin}" ` : ''
+    if (type === InjectType.css) {
+      const parent = pos === Inject.body ? body : head
+      addNewLine(parent)
+      parent.appendChild(new HTMLElement('link', {}, `rel="stylesheet" ${cors}href="/${fileName}"`))
+    } else {
+      const parent = pos === Inject.head ? head : body
+      addNewLine(parent)
+      parent.appendChild(new HTMLElement('script', {}, `${typeModule}${cors}src="/${fileName}"`))    
+    }
+  }
+}
+
+type ExtrenalsProcessor = (pos: ExternalPosition) => void
+
+const extrenalsProcessorFactory = (
+  injectCSSandJS: ReturnType<typeof injectCSSandJSFactory>,
+  externals?: IExternal[],
+): ExtrenalsProcessor => {
+  if (!externals) {
+    // tslint:disable-next-line: no-empty
+    return (_pos) => {}
+  }
+  return (processPos) => {
+    for (const {pos, file, type, crossorigin} of externals) {
+      if (pos === processPos) {
+        injectCSSandJS(file, type || path.extname(file).slice(1), undefined, crossorigin)
+      }
+    }
+  }
+}
+
 export default ({
   template,
   file,
@@ -150,9 +203,12 @@ export default ({
     }
 
     if (externals) {
-      for (const {pos} of externals) {
-        if (pos !== ExternalPosition.before && pos !== ExternalPosition.after) {
+      for (const {pos, crossorigin} of externals) {
+        if (!checkEnum(ExternalPosition, pos)) {
           this.error('Invalid position for the extrenal: ' + pos)
+        }
+        if (!checkEnum(Crossorigin, crossorigin)) {
+          this.error('Invalid crossorigin argument for the extrenal: ' + crossorigin)
         }
       }
     }
@@ -248,35 +304,8 @@ consider to use the esm format or switch off the option`)
       }
     }
 
-    const injectCSSandJS = (fileName: string, type: string, pos: Inject | undefined = undefined) => {
-      const cssParent = pos !== Inject.body ? head : body
-      const jsParent = pos !== Inject.head ? body : head
-      switch (type) {
-        case InjectType.css:
-          addNewLine(cssParent)
-          cssParent.appendChild(new HTMLElement('link', {}, `rel="stylesheet" href="/${fileName}"`))
-          break
-        case InjectType.js:
-          addNewLine(jsParent)
-          const typeModule = modules ? 'type="module" ' : ''
-          jsParent.appendChild(new HTMLElement('script', {}, `${typeModule}src="/${fileName}"`))     
-          break
-        default:
-          break
-      }
-    }
-
-    const processExternals: ExtrenalsProcessor = externals ?
-      (pos) => {
-        for (const external of externals) {
-          if (external.pos === pos) {
-            injectCSSandJS(external.file, external.type || path.extname(external.file).slice(1))
-          }
-        }
-      }
-    :
-// tslint:disable-next-line: no-empty
-      (_pos) => {}
+    const injectCSSandJS   = injectCSSandJSFactory(head, body, modules)
+    const processExternals = extrenalsProcessorFactory(injectCSSandJS, externals)
 
     // Inject externals before
     processExternals(ExternalPosition.before)
