@@ -248,7 +248,11 @@ consider to use the esm format or switch off the option`)
       ? template
       : fs.readFileSync(template).toString()
 
-    const doc = parse(data) as HTMLElement & {valid: boolean}
+    const doc = parse(data, {
+      pre: true,
+      script: true,
+      style: true,
+    }) as HTMLElement & {valid: boolean}
     if (!doc.valid) {
       this.error('Error parsing template')
     }
