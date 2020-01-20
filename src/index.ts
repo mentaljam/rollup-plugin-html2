@@ -176,7 +176,7 @@ export default ({
   preload,
   modules,
   minify: minifyOptions,
-  onlinePath: onlinePath,
+  onlinePath = '',
   ...options
 }: IPluginOptions): Plugin => ({
   name: 'html2',
@@ -331,12 +331,12 @@ consider to use the esm format or switch off the option`)
         const {name, ext} = path.parse(fileName)
         const injectType = ext.slice(1)
         if (name in entries) {
-          injectCSSandJS((onlinePath === undefined ? '' : onlinePath) + '/' + fileName, injectType, inject)
+          injectCSSandJS(`${onlinePath}/${fileName}`, injectType, inject)
         } else if (name in dynamicEntries && (preload as Set<string>).has(dynamicEntries[name])) {
           const linkType = extensionToType(injectType)
           if (linkType) {
             addNewLine(head)
-            head.appendChild(new HTMLElement('link', {}, `rel="preload" href="${(onlinePath === undefined ? '' : onlinePath)}/${fileName}" as="${linkType}"`))
+            head.appendChild(new HTMLElement('link', {}, `rel="preload" href="${onlinePath}/${fileName}" as="${linkType}"`))
           }
         }
       })
