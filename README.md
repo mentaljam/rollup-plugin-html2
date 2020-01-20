@@ -188,6 +188,23 @@ minify: {
 },
 ```
 
+### onlinePath
+
+```js
+string
+```
+
+A path to append to file references injected. This is useful for putting files on a CDN after building.
+
+#### Example
+```js
+onlinePath: '//www.example.com/foo',
+```
+Which will generate:
+```html
+<script src="//www.example.com/foo/main.js"></script>
+```
+
 ## License
 
 [MIT](LICENSE) © [Petr Tsymbarovich](mailto:petr@tsymbarovich.ru)
