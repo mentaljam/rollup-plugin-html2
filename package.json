@@ -32,11 +32,11 @@
   "license": "MIT",
   "dependencies": {
     "html-minifier": "^4.0.0",
-    "node-html-parser": "^1.1.18"
+    "node-html-parser": "^1.2.0"
   },
   "devDependencies": {
     "@types/html-minifier": "^3.5.3",
-    "rollup": "^1.29.0",
+    "rollup": "^1.31.0",
     "rollup-plugin-tslint": "^0.2.2",
     "rollup-plugin-typescript2": "^0.25.3",
     "tslint": "^5.20.1",
