@@ -6,8 +6,12 @@ This plugin was inspired by the
 [html-webpack-plugin](https://webpack.js.org/plugins/html-webpack-plugin) and
 [rollup-plugin-bundle-html](https://github.com/haifeng2013/rollup-plugin-bundle-html).
 
-rollup-plugin-html2 doesn't list the output directory but gets entries from the
+`rollup-plugin-html2` doesn't list the output directory but gets entries from the
 resulting bundle. Also it emits resulting HTML file as an asset so it could be accessed by other plugins.
+
+The plugin can be used alongside the [rollup-plugin-favicons](https://github.com/mentaljam/rollup-plugin-favicons).
+In this case `rollup-plugin-favicons` should be placed before `rollup-plugin-html2`
+in the plugin list.
 
 ## Install
 

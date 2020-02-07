@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import {minify, Options as MinifyOptions} from 'html-minifier'
 import {HTMLElement, parse, TextNode} from 'node-html-parser'
 import * as path from 'path'
-import {ModuleFormat, OutputAsset, OutputChunk, Plugin} from 'rollup'
+import {ModuleFormat, OutputAsset, OutputChunk, OutputOptions, Plugin} from 'rollup'
 
 
 const getChildElement = (node: HTMLElement, tag: string, append = true) => {
@@ -59,6 +59,11 @@ interface IPluginOptions {
   modules?:    boolean
   minify?:     false | MinifyOptions
   onlinePath?: string
+}
+
+export interface IExtendedOptions extends OutputOptions {
+  /** Output of the `rollup-plugin-favicons` */
+  __favicons_output?: string[]
 }
 
 const enum Cache {
@@ -245,7 +250,7 @@ consider to use the esm format or switch off the option`)
     return null
   },
 
-  generateBundle(_output, bundle) {
+  generateBundle(output, bundle) {
     const data = this.cache.get<boolean>(Cache.isHTML)
       ? template
       : fs.readFileSync(template).toString()
@@ -280,6 +285,12 @@ consider to use the esm format or switch off the option`)
         }
       })
     }
+
+    const {__favicons_output: favicons = []} = output as IExtendedOptions
+    favicons.forEach(f => {
+      head.appendChild(new TextNode(f))
+      addNewLine(head)
+    })
 
     if (title) {
       let node = head.querySelector('title') as HTMLElement
