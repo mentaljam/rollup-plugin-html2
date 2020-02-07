@@ -27,37 +27,37 @@ const enum Inject {
 
 const enum InjectType {
   css = 'css',
-  js = 'js',
+  js  = 'js',
 }
 
 enum ExternalPosition {
   before = 'before',
-  after = 'after',
+  after  = 'after',
 }
 
 enum Crossorigin {
-  anonymous = 'anonymous',
+  anonymous      = 'anonymous',
   usecredentials = 'use-credentials',
 }
 
 interface IExternal {
   crossorigin?: Crossorigin
-  file: string
-  type?: InjectType
-  pos: ExternalPosition
+  file:         string
+  type?:        InjectType
+  pos:          ExternalPosition
 }
 
 interface IPluginOptions {
-  template: string
-  file?: string
-  inject?: false | Inject
-  title?: string
-  favicon?: string
-  meta?: {[name: string]: string}
-  externals?: IExternal[]
-  preload?: string[] | Set<string>
-  modules?: boolean
-  minify?: false | MinifyOptions
+  template:    string
+  file?:       string
+  inject?:     false | Inject
+  title?:      string
+  favicon?:    string
+  meta?:       Record<string, string>
+  externals?:  IExternal[]
+  preload?:    string[] | Set<string>
+  modules?:    boolean
+  minify?:     false | MinifyOptions
   onlinePath?: string
 }
 
@@ -259,7 +259,7 @@ consider to use the esm format or switch off the option`)
       this.error('Error parsing template')
     }
 
-    const html = doc.querySelector('html')    
+    const html = doc.querySelector('html')
     if (!html) {
       this.error('The input template doesn\'t contain the `html` tag')
     }
