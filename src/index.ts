@@ -6,7 +6,7 @@ import {ModuleFormat, OutputAsset, OutputChunk, Plugin} from 'rollup'
 
 
 const getChildElement = (node: HTMLElement, tag: string, append = true) => {
-  let child = node.querySelector(tag)
+  let child = node.querySelector(tag) as HTMLElement
   if (!child) {
     child = new HTMLElement(tag, {})
     if (append) {
@@ -259,7 +259,7 @@ consider to use the esm format or switch off the option`)
       this.error('Error parsing template')
     }
 
-    const html = doc.querySelector('html')
+    const html = doc.querySelector('html') as HTMLElement
     if (!html) {
       this.error('The input template doesn\'t contain the `html` tag')
     }
@@ -282,7 +282,7 @@ consider to use the esm format or switch off the option`)
     }
 
     if (title) {
-      let node = head.querySelector('title')
+      let node = head.querySelector('title') as HTMLElement
       if (!node) {
         addNewLine(head)
         node = new HTMLElement('title', {})

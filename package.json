@@ -32,7 +32,7 @@
   "license": "MIT",
   "dependencies": {
     "html-minifier": "^4.0.0",
-    "node-html-parser": "^1.2.0"
+    "node-html-parser": "^1.2.4"
   },
   "devDependencies": {
     "@types/html-minifier": "^3.5.3",
