@@ -1,4 +1,4 @@
-import tslint from 'rollup-plugin-tslint'
+import {eslint} from 'rollup-plugin-eslint'
 import typescript from 'rollup-plugin-typescript2'
 
 
@@ -17,7 +17,7 @@ export default formats.map(format => ({
     'path',
   ],
   plugins: [
-    tslint(),
+    eslint(),
     typescript(),
   ],
 }))

@@ -5,7 +5,11 @@ import * as path from 'path'
 import {ModuleFormat, OutputAsset, OutputChunk, OutputOptions, Plugin} from 'rollup'
 
 
-const getChildElement = (node: HTMLElement, tag: string, append = true) => {
+const getChildElement = (
+  node: HTMLElement,
+  tag: string,
+  append = true,
+): HTMLElement => {
   let child = node.querySelector(tag) as HTMLElement
   if (!child) {
     child = new HTMLElement(tag, {})
@@ -18,7 +22,7 @@ const getChildElement = (node: HTMLElement, tag: string, append = true) => {
   return child
 }
 
-const addNewLine = (node: HTMLElement) => node.appendChild(new TextNode('\n  '))
+const addNewLine = (node: HTMLElement): TextNode => node.appendChild(new TextNode('\n  '))
 
 const enum Inject {
   head = 'head',
@@ -70,7 +74,9 @@ const enum Cache {
   isHTML = 'isHTML',
 }
 
-const normalizePreload = (preload?: string[] | Set<string>) => {
+const normalizePreload = (
+  preload?: string[] | Set<string>,
+): Set<string> => {
   if (!preload) {
     preload = []
   }
@@ -80,7 +86,9 @@ const normalizePreload = (preload?: string[] | Set<string>) => {
   return preload
 }
 
-const extensionToType = (ext: InjectType | string) => {
+const extensionToType = (
+  ext: InjectType | string,
+): string | null => {
   switch (ext) {
     case 'css': return 'style'
     case 'js' : return 'script'
@@ -101,7 +109,10 @@ const isChunk = (item: OutputAsset | OutputChunk): item is OutputChunk => {
   return !(item as OutputAsset).isAsset
 }
 
-const bundleReducer = (prev: IReducesBundle, cur: OutputAsset | OutputChunk) => {
+const bundleReducer = (
+  prev: IReducesBundle,
+  cur: OutputAsset | OutputChunk,
+): IReducesBundle => {
   if (isChunk(cur)) {
     // Use full name with possible hash and without extension to process
     // possible CSS files and other assets with same name of entry
@@ -115,29 +126,41 @@ const bundleReducer = (prev: IReducesBundle, cur: OutputAsset | OutputChunk) => 
   return prev
 }
 
-const formatSupportsModules = (f?: ModuleFormat) => (
+const formatSupportsModules = (
+  f?: ModuleFormat,
+): boolean => (
      f === 'es'
   || f === 'esm'
   || f === 'module'
 )
 
-const checkEnum = <T extends {}>(enumobj: T, val?: string) => (
+const checkEnum = <T extends {}>(
+  enumobj: T,
+  val?: string,
+): boolean => (
   !val || Object.values(enumobj).includes(val)
 )
+
+type InjectCSSAndJS = (
+  fileName:     string,
+  type:         InjectType | string,
+  pos?:         Inject,
+  crossorigin?: Crossorigin,
+) => void
 
 const injectCSSandJSFactory = (
   head: HTMLElement,
   body: HTMLElement,
   modules?: boolean,
-) => {
+): InjectCSSAndJS => {
   const typeModule = modules ? 'type="module" ' : ''
 
   return (
-    fileName: string,
-    type: InjectType | string,
-    pos?: Inject,
-    crossorigin?: Crossorigin,
-  ) => {
+    fileName,
+    type,
+    pos,
+    crossorigin,
+  ): void => {
     const cors = crossorigin ? `crossorigin="${crossorigin}" ` : ''
     if (type === InjectType.css) {
       const parent = pos === Inject.body ? body : head
@@ -146,7 +169,7 @@ const injectCSSandJSFactory = (
     } else {
       const parent = pos === Inject.head ? head : body
       addNewLine(parent)
-      parent.appendChild(new HTMLElement('script', {}, `${typeModule}${cors}src="${fileName}"`))    
+      parent.appendChild(new HTMLElement('script', {}, `${typeModule}${cors}src="${fileName}"`))
     }
   }
 }
@@ -158,10 +181,10 @@ const extrenalsProcessorFactory = (
   externals?: IExternal[],
 ): ExtrenalsProcessor => {
   if (!externals) {
-    // tslint:disable-next-line: no-empty
-    return (_pos) => {}
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    return (): void => {}
   }
-  return (processPos) => {
+  return (processPos): void => {
     for (const {pos, file, type, crossorigin} of externals) {
       if (pos === processPos) {
         injectCSSandJS(file, type || path.extname(file).slice(1), undefined, crossorigin)
@@ -186,7 +209,7 @@ export default ({
 }: IPluginOptions): Plugin => ({
   name: 'html2',
 
-  buildStart() {
+  buildStart(): void {
     const isHTML = /^.*<html>[\s\S]*<\/html>\s*$/i.test(template)
     if (isHTML) {
       if (!file) {
@@ -228,7 +251,7 @@ export default ({
     Object.keys(options).forEach(o => this.warn(`Ignoring unknown option "${o}"`))
   },
 
-  outputOptions({dir, file: bundleFile, format}) {
+  outputOptions({dir, file: bundleFile, format}): null {
     if (!file) {
       let distDir = process.cwd()
       if (dir) {
@@ -250,7 +273,7 @@ consider to use the esm format or switch off the option`)
     return null
   },
 
-  generateBundle(output, bundle) {
+  generateBundle(output, bundle): void {
     const data = this.cache.get<boolean>(Cache.isHTML)
       ? template
       : fs.readFileSync(template).toString()
@@ -362,8 +385,9 @@ consider to use the esm format or switch off the option`)
       source = minify(source, minifyOptions)
     }
 
-    bundle[file!] = {
-      fileName: file!,
+    // `file` has been checked in the `outputOptions` hook
+    bundle[file as string] = {
+      fileName: file as string,
       isAsset: true,
       source,
       type: 'asset',
