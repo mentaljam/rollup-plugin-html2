@@ -32,17 +32,17 @@
   "license": "MIT",
   "dependencies": {
     "html-minifier": "^4.0.0",
-    "node-html-parser": "^1.2.4"
+    "node-html-parser": "^1.2.5"
   },
   "devDependencies": {
     "@types/html-minifier": "^3.5.3",
-    "@types/node": "^13.7.0",
-    "@typescript-eslint/eslint-plugin": "^2.19.2",
-    "@typescript-eslint/parser": "^2.19.2",
+    "@types/node": "^13.7.1",
+    "@typescript-eslint/eslint-plugin": "^2.20.0",
+    "@typescript-eslint/parser": "^2.20.0",
     "eslint": "^6.8.0",
-    "rollup": "^1.31.0",
+    "rollup": "^1.31.1",
     "rollup-plugin-eslint": "^7.0.0",
-    "rollup-plugin-typescript2": "^0.25.3",
+    "rollup-plugin-typescript2": "^0.26.0",
     "typescript": "^3.7.5"
   },
   "peerDependencies": {
