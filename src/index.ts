@@ -2,7 +2,14 @@ import * as fs from 'fs'
 import {minify, Options as MinifyOptions} from 'html-minifier'
 import {HTMLElement, parse, TextNode} from 'node-html-parser'
 import * as path from 'path'
-import {ModuleFormat, OutputAsset, OutputChunk, OutputOptions, Plugin} from 'rollup'
+import {
+  ModuleFormat,
+  OutputAsset,
+  OutputChunk,
+  OutputOptions,
+  Plugin,
+  PluginContext,
+} from 'rollup'
 
 
 const getChildElement = (
@@ -61,6 +68,7 @@ interface IPluginOptions {
   externals?:  IExternal[]
   preload?:    string[] | Set<string>
   modules?:    boolean
+  nomodule?:   boolean
   minify?:     false | MinifyOptions
   onlinePath?: string
 }
@@ -141,6 +149,29 @@ const checkEnum = <T extends {}>(
   !val || Object.values(enumobj).includes(val)
 )
 
+const checkBoolean = (
+  context: PluginContext,
+  name:    string,
+  value:   unknown,
+): void => {
+  const type = typeof value
+  if (type !== 'boolean' && type !== 'undefined') {
+    context.error(`Invalid \`${name}\` argument: ${JSON.stringify(value)}`)
+  }
+}
+
+const checkModulesOption = (
+  context: PluginContext,
+  name:    string,
+  format:  ModuleFormat | undefined,
+  value:   boolean | undefined,
+): void => {
+  if (value) {
+    context.error(`The \`${name}\` option is set to true but the output.format is ${format}, \
+consider to use another format or switch off the option`)
+  }
+}
+
 type InjectCSSAndJS = (
   fileName:     string,
   type:         InjectType | string,
@@ -149,11 +180,15 @@ type InjectCSSAndJS = (
 ) => void
 
 const injectCSSandJSFactory = (
-  head: HTMLElement,
-  body: HTMLElement,
-  modules?: boolean,
+  head:     HTMLElement,
+  body:     HTMLElement,
+  modules:  boolean | undefined,
+  nomodule: boolean | undefined,
 ): InjectCSSAndJS => {
-  const typeModule = modules ? 'type="module" ' : ''
+  const moduleattr =
+      modules  ? 'type="module" '
+    : nomodule ? 'nomodule '
+    : ''
 
   return (
     fileName,
@@ -169,7 +204,7 @@ const injectCSSandJSFactory = (
     } else {
       const parent = pos === Inject.head ? head : body
       addNewLine(parent)
-      parent.appendChild(new HTMLElement('script', {}, `${typeModule}${cors}src="${fileName}"`))
+      parent.appendChild(new HTMLElement('script', {}, `${moduleattr}${cors}src="${fileName}"`))
     }
   }
 }
@@ -203,6 +238,7 @@ export default ({
   externals,
   preload,
   modules,
+  nomodule,
   minify: minifyOptions,
   onlinePath = '',
   ...options
@@ -243,10 +279,8 @@ export default ({
       }
     }
 
-    const typeofmodules = typeof modules
-    if (typeofmodules !== 'boolean' && typeofmodules !== 'undefined') {
-      this.error('Invalid `modules` argument: ' + JSON.stringify(modules))
-    }
+    checkBoolean(this, 'modules',  modules)
+    checkBoolean(this, 'nomodule', nomodule)
 
     Object.keys(options).forEach(o => this.warn(`Ignoring unknown option "${o}"`))
   },
@@ -266,10 +300,12 @@ export default ({
         this.error('Could\'t write the generated HTML to the source template, define one of the options: `file`, `output.file` or `output.dir`')
       }
     }
-    if (modules && !formatSupportsModules(format)) {
-      this.error(`The modules option is set to true but the output.format is ${format}, \
-consider to use the esm format or switch off the option`)
+    if (modules && nomodule) {
+      this.error('Options `modules` and `nomodule` cannot be set at the same time')
     }
+    const modulesSupport = formatSupportsModules(format)
+    checkModulesOption(this, 'modules', format, modules && !modulesSupport)
+    checkModulesOption(this, 'modules', format, nomodule && modulesSupport)
     return null
   },
 
@@ -345,7 +381,7 @@ consider to use the esm format or switch off the option`)
       }
     }
 
-    const injectCSSandJS   = injectCSSandJSFactory(head, body, modules)
+    const injectCSSandJS   = injectCSSandJSFactory(head, body, modules, nomodule)
     const processExternals = extrenalsProcessorFactory(injectCSSandJS, externals)
 
     // Inject externals before

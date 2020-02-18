@@ -171,6 +171,17 @@ boolean | undefined
 ```
 
 Inject entries as modules. This only works if the output format supports modules.
+Either `modules` or `nomodule` can be set at the same time.
+
+### nomodule
+
+```js
+boolean | undefined
+```
+
+Add the `nomodule` attribute to the injected entries.
+This only works if the output format does not support modules.
+Either `modules` or `nomodule` can be set at the same time.
 
 ### minify
 
