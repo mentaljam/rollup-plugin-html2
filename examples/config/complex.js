@@ -3,9 +3,9 @@ import postcss from 'rollup-plugin-postcss'
 
 
 export default {
-  input: 'index.js',
+  input: 'src/index.js',
   output: {
-    dir: 'dist',
+    dir: 'dist/complex',
     entryFileNames: '[name]-[hash].js',
     format: 'esm',
   },
@@ -14,10 +14,10 @@ export default {
       extract: true,
     }),
     html2({
-      template: 'index.html',
-      title: 'Rollup HTML2 plugin',
+      template: 'src/index.html',
+      title: 'Rollup HTML2 plugin example',
       meta: {
-        description: 'Usage example for the rollup-plugin-html2',
+        description: 'A complex usage example for the rollup-plugin-html2',
       },
       externals: [{
         file: 'https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css',

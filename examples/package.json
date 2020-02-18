@@ -1,0 +1,17 @@
+{
+  "name": "rollup-plugin-html2-examples",
+  "version": "1.0.0",
+  "description": "Usage examples for the rollup-plugin-html2.",
+  "scripts": {
+    "build:complex": "rollup -c config/complex.js",
+    "build:nomodule": "rollup -c config/nomodule.js",
+    "build": "npm run build:complex & npm run build:nomodule"
+  },
+  "author": "Petr Tsymbarovich <petr@tsymbarovich.ru>",
+  "license": "MIT",
+  "devDependencies": {
+    "rollup": "^1.31.1",
+    "rollup-plugin-html2": "../",
+    "rollup-plugin-postcss": "^2.0.6"
+  }
+}

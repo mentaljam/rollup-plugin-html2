@@ -1,5 +1,5 @@
 import './index.css'
 
-import('./lib').then(mod => {
+import('./lib').then(function (mod) {
   (mod && mod.default)()
 })
