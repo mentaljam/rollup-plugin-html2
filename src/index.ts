@@ -1,15 +1,23 @@
 import * as fs from 'fs'
-import {minify, Options as MinifyOptions} from 'html-minifier'
+import {minify} from 'html-minifier'
 import {HTMLElement, parse, TextNode} from 'node-html-parser'
 import * as path from 'path'
 import {
   ModuleFormat,
   OutputAsset,
   OutputChunk,
-  OutputOptions,
-  Plugin,
   PluginContext,
 } from 'rollup'
+
+import {
+  Crossorigin,
+  ExternalPosition,
+  IExtendedOptions,
+  IExternal,
+  Inject,
+  InjectType,
+  RollupPluginHTML2,
+} from './types'
 
 
 const getChildElement = (
@@ -30,57 +38,6 @@ const getChildElement = (
 }
 
 const addNewLine = (node: HTMLElement): TextNode => node.appendChild(new TextNode('\n  '))
-
-const enum Inject {
-  head = 'head',
-  body = 'body',
-}
-
-const enum InjectType {
-  css = 'css',
-  js  = 'js',
-}
-
-enum ExternalPosition {
-  before = 'before',
-  after  = 'after',
-}
-
-enum Crossorigin {
-  anonymous      = 'anonymous',
-  usecredentials = 'use-credentials',
-}
-
-interface IExternal {
-  crossorigin?: Crossorigin
-  file:         string
-  type?:        InjectType
-  pos:          ExternalPosition
-}
-
-interface IPluginOptions {
-  template:    string
-  file?:       string
-  inject?:     false | Inject
-  title?:      string
-  favicon?:    string
-  meta?:       Record<string, string>
-  externals?:  IExternal[]
-  preload?:    string[] | Set<string>
-  modules?:    boolean
-  nomodule?:   boolean
-  minify?:     false | MinifyOptions
-  onlinePath?: string
-}
-
-export interface IExtendedOptions extends OutputOptions {
-  /** Output of the `rollup-plugin-favicons` */
-  __favicons_output?: string[]
-}
-
-const enum Cache {
-  isHTML = 'isHTML',
-}
 
 const normalizePreload = (
   preload?: string[] | Set<string>,
@@ -104,18 +61,14 @@ const extensionToType = (
   }
 }
 
-interface IEntryMap {
-  [chunk: string]: string
-}
-
 interface IReducesBundle {
-  entries: IEntryMap
-  dynamicEntries: IEntryMap
+  entries:        Record<string, string>
+  dynamicEntries: Record<string, string>
 }
 
-const isChunk = (item: OutputAsset | OutputChunk): item is OutputChunk => {
-  return !(item as OutputAsset).isAsset
-}
+const isChunk = (item: OutputAsset | OutputChunk): item is OutputChunk => (
+  item.type === 'chunk'
+)
 
 const bundleReducer = (
   prev: IReducesBundle,
@@ -228,7 +181,11 @@ const extrenalsProcessorFactory = (
   }
 }
 
-export default ({
+const enum Cache {
+  isHTML = 'isHTML',
+}
+
+const html2: RollupPluginHTML2 = ({
   template,
   file,
   inject,
@@ -242,7 +199,7 @@ export default ({
   minify: minifyOptions,
   onlinePath = '',
   ...options
-}: IPluginOptions): Plugin => ({
+}) => ({
   name: 'html2',
 
   buildStart(): void {
@@ -392,9 +349,9 @@ export default ({
       const files = Object.values(bundle)
       // First of all get entries
       const {entries, dynamicEntries} = files.reduce(bundleReducer, {
-        dynamicEntries: {} as IEntryMap,
-        entries: {} as IEntryMap,
-      })
+        dynamicEntries: {},
+        entries: {},
+      } as IReducesBundle)
       // Now process all files and inject only entries and preload files
       preload = normalizePreload(preload)
       files.forEach(({fileName}) => {
@@ -430,3 +387,5 @@ export default ({
     }
   },
 })
+
+export default html2

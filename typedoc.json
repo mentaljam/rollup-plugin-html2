@@ -1,0 +1,8 @@
+{
+  "mode": "file",
+  "out": "docs",
+  "toc": [
+    "RollupPluginHTML2",
+    "IPluginOptions"
+  ]
+}

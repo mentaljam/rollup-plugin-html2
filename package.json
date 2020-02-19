@@ -20,6 +20,7 @@
   ],
   "scripts": {
     "build": "rollup -c",
+    "docs": "npx typedoc src/types.ts && npx gh-pages -d docs",
     "lint": "eslint src/*.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
