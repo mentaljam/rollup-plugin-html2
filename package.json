@@ -33,21 +33,21 @@
   "license": "MIT",
   "dependencies": {
     "html-minifier": "^4.0.0",
-    "node-html-parser": "^1.2.5"
+    "node-html-parser": "^1.2.8"
   },
   "devDependencies": {
     "@types/html-minifier": "^3.5.3",
-    "@types/node": "^13.7.1",
-    "@typescript-eslint/eslint-plugin": "^2.20.0",
-    "@typescript-eslint/parser": "^2.20.0",
+    "@types/node": "^13.9.0",
+    "@typescript-eslint/eslint-plugin": "^2.22.0",
+    "@typescript-eslint/parser": "^2.22.0",
     "eslint": "^6.8.0",
-    "rollup": "^1.31.1",
+    "rollup": "^2.0.2",
     "rollup-plugin-eslint": "^7.0.0",
     "rollup-plugin-typescript2": "^0.26.0",
-    "typescript": "^3.7.5"
+    "typescript": "^3.8.3"
   },
   "peerDependencies": {
     "@types/html-minifier": "^3.5.3",
-    "rollup": ">=1.25.0"
+    "rollup": ">=2.0.2"
   }
 }

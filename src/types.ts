@@ -72,7 +72,7 @@ interface IPluginOptions {
   template:    string
 
   /**
-   * A file path where to write the resulting HTML document.
+   * A file name of the resulting HTML document.
    *
    * ⚠️ Mandatory if the [[template]] option is set to an HTML.
    *
@@ -85,6 +85,11 @@ interface IPluginOptions {
    * ```js
    * 'index.html'
    * ```
+   */
+  fileName?:   string
+
+  /** 
+   * @deprecated Use [[fileName]] instead.
    */
   file?:       string
 

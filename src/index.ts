@@ -25,7 +25,7 @@ const getChildElement = (
   tag: string,
   append = true,
 ): HTMLElement => {
-  let child = node.querySelector(tag) as HTMLElement
+  let child = node.querySelector(tag)
   if (!child) {
     child = new HTMLElement(tag, {})
     if (append) {
@@ -187,7 +187,8 @@ const enum Cache {
 
 const html2: RollupPluginHTML2 = ({
   template,
-  file,
+  file: deprecatedFileOption,
+  fileName: htmlFileName,
   inject,
   title,
   favicon,
@@ -203,9 +204,12 @@ const html2: RollupPluginHTML2 = ({
   name: 'html2',
 
   buildStart(): void {
+    if (deprecatedFileOption) {
+      this.error('The `file` option is deprecated, use the `fileName` instead.')
+    }
     const isHTML = /^.*<html>[\s\S]*<\/html>\s*$/i.test(template)
     if (isHTML) {
-      if (!file) {
+      if (!htmlFileName) {
         this.error('When `template` is an HTML string the `file` option must be defined')
       }
     } else {
@@ -243,7 +247,7 @@ const html2: RollupPluginHTML2 = ({
   },
 
   outputOptions({dir, file: bundleFile, format}): null {
-    if (!file) {
+    if (!htmlFileName) {
       let distDir = process.cwd()
       if (dir) {
         distDir = path.resolve(distDir, dir)
@@ -252,8 +256,8 @@ const html2: RollupPluginHTML2 = ({
         distDir = path.isAbsolute(bundleDir) ? bundleDir : path.resolve(distDir, bundleDir)
       }
       // Template is always a file path
-      file = path.resolve(distDir, path.basename(template))
-      if (file === path.resolve(template)) {
+      htmlFileName = path.resolve(distDir, path.basename(template))
+      if (htmlFileName === path.resolve(template)) {
         this.error('Could\'t write the generated HTML to the source template, define one of the options: `file`, `output.file` or `output.dir`')
       }
     }
@@ -280,7 +284,7 @@ const html2: RollupPluginHTML2 = ({
       this.error('Error parsing template')
     }
 
-    const html = doc.querySelector('html') as HTMLElement
+    const html = doc.querySelector('html')
     if (!html) {
       this.error('The input template doesn\'t contain the `html` tag')
     }
@@ -309,7 +313,7 @@ const html2: RollupPluginHTML2 = ({
     })
 
     if (title) {
-      let node = head.querySelector('title') as HTMLElement
+      let node = head.querySelector('title')
       if (!node) {
         addNewLine(head)
         node = new HTMLElement('title', {})
@@ -330,12 +334,11 @@ const html2: RollupPluginHTML2 = ({
         addNewLine(head)
         head.appendChild(newLink)
       }
-      bundle[fileName] = {
+      this.emitFile({
         fileName,
-        isAsset: true,
         source: fs.readFileSync(favicon),
         type: 'asset',
-      }
+      })
     }
 
     const injectCSSandJS   = injectCSSandJSFactory(head, body, modules, nomodule)
@@ -379,12 +382,11 @@ const html2: RollupPluginHTML2 = ({
     }
 
     // `file` has been checked in the `outputOptions` hook
-    bundle[file as string] = {
-      fileName: file as string,
-      isAsset: true,
+    this.emitFile({
+      fileName: path.basename(htmlFileName as string),
       source,
       type: 'asset',
-    }
+    })
   },
 })
 
