@@ -182,7 +182,7 @@ const extrenalsProcessorFactory = (
 }
 
 const enum Cache {
-  isHTML = 'isHTML',
+  templateIsFile = 'templateIsFile',
 }
 
 const html2: RollupPluginHTML2 = ({
@@ -207,19 +207,13 @@ const html2: RollupPluginHTML2 = ({
     if (deprecatedFileOption) {
       this.error('The `file` option is deprecated, use the `fileName` instead.')
     }
-    const isHTML = /^.*<html>[\s\S]*<\/html>\s*$/i.test(template)
-    if (isHTML) {
-      if (!htmlFileName) {
-        this.error('When `template` is an HTML string the `file` option must be defined')
-      }
-    } else {
-      if (fs.existsSync(template) && fs.lstatSync(template).isFile()) {
-        this.addWatchFile(template)
-      } else {
-        this.error('`template` must be an HTML or a file path')
-      }
+    const templateIsFile = fs.existsSync(template)
+    if (templateIsFile && fs.lstatSync(template).isFile()) {
+      this.addWatchFile(template)
+    } else if (!htmlFileName) {
+      this.error('When `template` is an HTML string the `fileName` option must be defined')
     }
-    this.cache.set(Cache.isHTML, isHTML)
+    this.cache.set(Cache.templateIsFile, templateIsFile)
 
     if (favicon && !(fs.existsSync(favicon) && fs.lstatSync(favicon).isFile())) {
       this.error('The provided favicon file does\'t exist')
@@ -271,9 +265,9 @@ const html2: RollupPluginHTML2 = ({
   },
 
   generateBundle(output, bundle): void {
-    const data = this.cache.get<boolean>(Cache.isHTML)
-      ? template
-      : fs.readFileSync(template).toString()
+    const data = this.cache.get<boolean>(Cache.templateIsFile)
+      ? fs.readFileSync(template).toString()
+      : template
 
     const doc = parse(data, {
       pre: true,
