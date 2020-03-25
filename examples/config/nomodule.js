@@ -35,7 +35,7 @@ export default [
     css: true,
     html2Config: {
       template: 'src/index.html',
-      file: 'index.html.tmp',
+      fileName: 'index.html.tmp',
       title: 'Rollup HTML2 plugin example',
       modules: true,
       meta: {
@@ -50,7 +50,7 @@ export default [
     inlineDynamicImports: true,
     html2Config: {
       template: 'dist/nomodule/index.html.tmp',
-      file: 'index.html',
+      fileName: 'index.html',
       nomodule: true,
       externals: [{
         file: 'https://cdn.jsdelivr.net/npm/promise-polyfill@8/dist/polyfill.min.js',
