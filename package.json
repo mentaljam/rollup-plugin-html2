@@ -34,16 +34,16 @@
   "license": "MIT",
   "dependencies": {
     "html-minifier": "^4.0.0",
-    "node-html-parser": "^1.2.8"
+    "node-html-parser": "^1.2.14"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^4.0.0",
     "@types/html-minifier": "^3.5.3",
-    "@types/node": "^13.9.0",
-    "@typescript-eslint/eslint-plugin": "^2.22.0",
-    "@typescript-eslint/parser": "^2.22.0",
+    "@types/node": "^13.11.0",
+    "@typescript-eslint/eslint-plugin": "^2.26.0",
+    "@typescript-eslint/parser": "^2.26.0",
     "eslint": "^6.8.0",
-    "rollup": "^2.0.2",
+    "rollup": "^2.3.2",
     "typescript": "^3.8.3"
   },
   "peerDependencies": {
