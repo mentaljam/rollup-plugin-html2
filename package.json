@@ -19,9 +19,10 @@
     "README.md"
   ],
   "scripts": {
+    "prebuild": "pnpm run lint",
     "build": "rollup -c",
     "docs": "npx typedoc src/types.ts && npx gh-pages -d docs",
-    "lint": "eslint src/*.ts",
+    "lint": "eslint src/*.ts -f visualstudio",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -43,7 +44,6 @@
     "@typescript-eslint/parser": "^2.22.0",
     "eslint": "^6.8.0",
     "rollup": "^2.0.2",
-    "rollup-plugin-eslint": "^7.0.0",
     "typescript": "^3.8.3"
   },
   "peerDependencies": {

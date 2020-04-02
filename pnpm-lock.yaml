@@ -9,7 +9,6 @@ devDependencies:
   '@typescript-eslint/parser': 2.22.0_eslint@6.8.0+typescript@3.8.3
   eslint: 6.8.0
   rollup: 2.0.2
-  rollup-plugin-eslint: 7.0.0
   typescript: 3.8.3
 lockfileVersion: 5.1
 packages:
@@ -489,10 +488,6 @@ packages:
       node: '>=4.0'
     resolution:
       integrity: sha512-39nnKffWz8xN1BU/2c79n9nB9HDzo0niYUqx6xyqUnyoAnQyyWpOTdZEeiCch8BBu515t4wp9ZmgVfVhn9EBpw==
-  /estree-walker/0.6.1:
-    dev: true
-    resolution:
-      integrity: sha512-SqmZANLWS0mnatqbSfRP5g8OXZC12Fgg1IwNtLsyHDzJizORW4khDfjPqJZsemPWBB2uqykUah5YpQ6epsqC/w==
   /estree-walker/1.0.1:
     dev: true
     resolution:
@@ -945,19 +940,6 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-mwqeW5XsA2qAejG46gYdENaxXjx9onRNCfn7L0duuP4hCuTIi/QO7PDK07KJfp1d+izWPrzEJDcSqBa0OZQriA==
-  /rollup-plugin-eslint/7.0.0:
-    dependencies:
-      eslint: 6.8.0
-      rollup-pluginutils: 2.8.2
-    dev: true
-    resolution:
-      integrity: sha512-u35kXiY11ULeNQGTlRkYx7uGJ/hS/Dx3wj8f9YVC3oMLTGU9fOqQJsAKYtBFZU3gJ8Vt3gu8ppB1vnKl+7gatQ==
-  /rollup-pluginutils/2.8.2:
-    dependencies:
-      estree-walker: 0.6.1
-    dev: true
-    resolution:
-      integrity: sha512-EEp9NhnUkwY8aif6bxgovPHMoMoNr2FulJziTndpt5H9RdwC47GSGuII9XxpSdzVGM0GWrNPHV6ie1LTNJPaLQ==
   /rollup/2.0.2:
     dev: true
     engines:
@@ -1220,5 +1202,4 @@ specifiers:
   html-minifier: ^4.0.0
   node-html-parser: ^1.2.8
   rollup: ^2.0.2
-  rollup-plugin-eslint: ^7.0.0
   typescript: ^3.8.3
