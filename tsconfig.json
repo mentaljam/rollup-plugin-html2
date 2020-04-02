@@ -9,9 +9,10 @@
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "outDir": "./dist"
+    "outDir": "dist",
+    "rootDir": "src"
   },
   "include": [
-    "./src"
+    "src/*.ts"
   ]
 }

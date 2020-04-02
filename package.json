@@ -36,6 +36,7 @@
     "node-html-parser": "^1.2.8"
   },
   "devDependencies": {
+    "@rollup/plugin-typescript": "^4.0.0",
     "@types/html-minifier": "^3.5.3",
     "@types/node": "^13.9.0",
     "@typescript-eslint/eslint-plugin": "^2.22.0",
@@ -43,7 +44,6 @@
     "eslint": "^6.8.0",
     "rollup": "^2.0.2",
     "rollup-plugin-eslint": "^7.0.0",
-    "rollup-plugin-typescript2": "^0.26.0",
     "typescript": "^3.8.3"
   },
   "peerDependencies": {

@@ -1,5 +1,5 @@
 import {eslint} from 'rollup-plugin-eslint'
-import typescript from 'rollup-plugin-typescript2'
+import typescript from '@rollup/plugin-typescript'
 
 
 const formats = ['cjs', 'es']
@@ -7,7 +7,8 @@ const formats = ['cjs', 'es']
 export default formats.map(format => ({
   input: 'src/index.ts',
   output: {
-    file: `dist/index.${format}.js`,
+    dir: 'dist',
+    entryFileNames: '[name].[format].js',
     format,
   },
   external: [
