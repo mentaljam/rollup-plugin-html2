@@ -8,6 +8,7 @@ export default formats.map(format => ({
   output: {
     dir: 'dist',
     entryFileNames: '[name].[format].js',
+    exports: 'auto',
     format,
   },
   external: [

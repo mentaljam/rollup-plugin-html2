@@ -95,9 +95,9 @@ const formatSupportsModules = (
   || f === 'module'
 )
 
-const checkEnum = <T extends {}>(
-  enumobj: T,
-  val?: string,
+const checkEnum = <T, E extends Record<string, T>>(
+  enumobj: E,
+  val?: T,
 ): boolean => (
   !val || Object.values(enumobj).includes(val)
 )
@@ -120,7 +120,7 @@ const checkModulesOption = (
   value:   boolean | undefined,
 ): void => {
   if (value) {
-    context.error(`The \`${name}\` option is set to true but the output.format is ${format}, \
+    context.error(`The \`${name}\` option is set to true but the output.format is ${format as string}, \
 consider to use another format or switch off the option`)
   }
 }
@@ -220,7 +220,7 @@ const html2: RollupPluginHTML2 = ({
     }
 
     if (typeof inject === 'string' && !(inject === Inject.head || inject === Inject.body)) {
-      this.error('Invalid inject argument: ' + inject)
+      this.error('Invalid inject argument: ' + (inject as string))
     }
 
     if (externals) {
@@ -229,7 +229,7 @@ const html2: RollupPluginHTML2 = ({
           this.error('Invalid position for the extrenal: ' + pos)
         }
         if (!checkEnum(Crossorigin, crossorigin)) {
-          this.error('Invalid crossorigin argument for the extrenal: ' + crossorigin)
+          this.error('Invalid crossorigin argument for the extrenal: ' + (crossorigin as string))
         }
       }
     }
