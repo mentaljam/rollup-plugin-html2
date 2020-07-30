@@ -51,6 +51,15 @@ const normalizePreload = (
   return preload
 }
 
+const normalizePrefix = (
+  prefix = '',
+) => {
+  if (prefix && !prefix.endsWith('/')) {
+    prefix += '/'
+  }
+  return prefix
+}
+
 const extensionToType = (
   ext: InjectType | string,
 ): string | null => {
@@ -198,7 +207,7 @@ const html2: RollupPluginHTML2 = ({
   modules,
   nomodule,
   minify: minifyOptions,
-  onlinePath = '',
+  onlinePath,
   ...options
 }) => ({
   name: 'html2',
@@ -351,16 +360,18 @@ const html2: RollupPluginHTML2 = ({
       } as IReducesBundle)
       // Now process all files and inject only entries and preload files
       preload = normalizePreload(preload)
+      const prefix = normalizePrefix(onlinePath)
       files.forEach(({fileName}) => {
         const {name, ext} = path.parse(fileName)
-        const injectType = ext.slice(1)
+        const injectType  = ext.slice(1)
+        const filePath    = prefix + fileName
         if (name in entries) {
-          injectCSSandJS(`${onlinePath}/${fileName}`, injectType, inject)
+          injectCSSandJS(filePath, injectType, inject)
         } else if (name in dynamicEntries && (preload as Set<string>).has(dynamicEntries[name])) {
           const linkType = extensionToType(injectType)
           if (linkType) {
             addNewLine(head)
-            head.appendChild(new HTMLElement('link', {}, `rel="preload" href="${onlinePath}/${fileName}" as="${linkType}"`))
+            head.appendChild(new HTMLElement('link', {}, `rel="preload" href="${filePath}" as="${linkType}"`))
           }
         }
       })
