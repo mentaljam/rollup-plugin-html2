@@ -259,8 +259,8 @@ const html2: RollupPluginHTML2 = ({
       this.error('Options `modules` and `nomodule` cannot be set at the same time')
     }
     const modulesSupport = formatSupportsModules(format)
-    checkModulesOption(this, 'modules', format, modules && !modulesSupport)
-    checkModulesOption(this, 'modules', format, nomodule && modulesSupport)
+    checkModulesOption(this, 'modules',  format, modules  && !modulesSupport)
+    checkModulesOption(this, 'nomodule', format, nomodule && modulesSupport)
     return null
   },
 
