@@ -79,22 +79,29 @@ const isChunk = (item: OutputAsset | OutputChunk): item is OutputChunk => (
   item.type === 'chunk'
 )
 
-const bundleReducer = (
-  prev: IReducesBundle,
-  cur: OutputAsset | OutputChunk,
-): IReducesBundle => {
-  if (isChunk(cur)) {
-    // Use full name with possible hash and without extension to process
-    // possible CSS files and other assets with same name of entry
-    const {name} = path.parse(cur.fileName)
-    if (cur.isEntry) {
-      prev.entries[name] = cur.name
-    } else if (cur.isDynamicEntry) {
-      prev.dynamicEntries[name] = cur.name
+function getEntries(files: (OutputAsset | OutputChunk)[], preload: Set<string>) { 
+  const bundleReducer = (
+    prev: IReducesBundle,
+    cur: OutputAsset | OutputChunk,
+  ): IReducesBundle => {
+    if (isChunk(cur)) {
+      // Use full name with possible hash and without extension to process
+      // possible CSS files and other assets with same name of entry
+      const {name} = path.parse(cur.fileName)
+      if (cur.isEntry) {
+        prev.entries[name] = cur.name
+      } else if (cur.isDynamicEntry || preload.has(cur.name)) {
+        prev.dynamicEntries[name] = cur.name
+      }
     }
+    return prev
   }
-  return prev
+  return files.reduce(bundleReducer,{
+    dynamicEntries: {},
+    entries: {},
+  } as IReducesBundle);
 }
+
 
 const formatSupportsModules = (
   f?: ModuleFormat,
@@ -354,12 +361,9 @@ const html2: RollupPluginHTML2 = ({
     if (inject !== false) {
       const files = Object.values(bundle)
       // First of all get entries
-      const {entries, dynamicEntries} = files.reduce(bundleReducer, {
-        dynamicEntries: {},
-        entries: {},
-      } as IReducesBundle)
-      // Now process all files and inject only entries and preload files
       preload = normalizePreload(preload)
+      const { entries, dynamicEntries } = getEntries(files, preload);
+      // Now process all files and inject only entries and preload files
       const prefix = normalizePrefix(onlinePath)
       files.forEach(({fileName}) => {
         const {name, ext} = path.parse(fileName)
