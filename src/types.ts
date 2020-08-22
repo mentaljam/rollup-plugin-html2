@@ -3,43 +3,42 @@ import {OutputOptions, Plugin} from 'rollup'
 
 
 /** Where to inject entries */
-export const enum Inject {
+export type Inject =
   /** Inject to the `<head>` tag. */
-  head = 'head',
+   'head'|
   /** Inject to the `<body>` tag. */
-  body = 'body',
-}
+  'body'
+
 
 /** Which type of file is injected */
-export const enum InjectType {
+export type InjectType =
   /** Link to a CSS file. */
-  css = 'css',
+  |'css'
   /** JS script file. */
-  js  = 'js',
-}
+  |'js'
+
 
 /** Where to insert the external */
-export enum ExternalPosition {
+export type ExternalPosition =
   /** Insert before generated entries. */
-  before = 'before',
+  'before' |
   /** Insert after generated entries. */
-  after  = 'after',
-}
+  'after'
 
 /**
- * Enumeration indicates whether CORS must be used when fetching the resource
+ * Types indicates whether CORS must be used when fetching the resource
  *
  * If the attribute is `undefined`, the resource is fetched without a CORS
  * request.
  *
  * [Details](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
  */
-export enum Crossorigin {
+export type Crossorigin =
   /** A cross-origin request is performed, but no credential is sent. */
-  anonymous      = 'anonymous',
+  'anonymous' |
   /** A cross-origin request is performed along with a credential sent. */
-  usecredentials = 'use-credentials',
-}
+  'use-credentials'
+
 
 /** An external resource configuration */
 export interface IExternal {
