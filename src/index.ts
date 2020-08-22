@@ -17,6 +17,7 @@ import {
   Inject,
   InjectType,
   RollupPluginHTML2,
+  PreloadChunk,
 } from './types'
 
 
@@ -38,18 +39,6 @@ const getChildElement = (
 }
 
 const addNewLine = (node: HTMLElement): TextNode => node.appendChild(new TextNode('\n  '))
-
-const normalizePreload = (
-  preload?: string[] | Set<string>,
-): Set<string> => {
-  if (!preload) {
-    preload = []
-  }
-  if (preload instanceof Array) {
-    preload = new Set(preload)
-  }
-  return preload
-}
 
 const normalizePrefix = (
   prefix = '',
@@ -79,7 +68,7 @@ const isChunk = (item: OutputAsset | OutputChunk): item is OutputChunk => (
   item.type === 'chunk'
 )
 
-function getEntries(files: (OutputAsset | OutputChunk)[], preload: Set<string>) { 
+function getEntries(files: (OutputAsset | OutputChunk)[], preload: PreloadChunk[]) { 
   const bundleReducer = (
     prev: IReducesBundle,
     cur: OutputAsset | OutputChunk,
@@ -90,7 +79,7 @@ function getEntries(files: (OutputAsset | OutputChunk)[], preload: Set<string>) 
       const {name} = path.parse(cur.fileName)
       if (cur.isEntry) {
         prev.entries[name] = cur.name
-      } else if (cur.isDynamicEntry || preload.has(cur.name)) {
+      } else if (cur.isDynamicEntry || preload.find(x => x.name === cur.name)) {
         prev.dynamicEntries[name] = cur.name
       }
     }
@@ -210,7 +199,7 @@ const html2: RollupPluginHTML2 = ({
   favicon,
   meta,
   externals,
-  preload,
+  preload = [],
   modules,
   nomodule,
   minify: minifyOptions,
@@ -361,7 +350,6 @@ const html2: RollupPluginHTML2 = ({
     if (inject !== false) {
       const files = Object.values(bundle)
       // First of all get entries
-      preload = normalizePreload(preload)
       const { entries, dynamicEntries } = getEntries(files, preload);
       // Now process all files and inject only entries and preload files
       const prefix = normalizePrefix(onlinePath)
@@ -371,11 +359,14 @@ const html2: RollupPluginHTML2 = ({
         const filePath    = prefix + fileName
         if (name in entries) {
           injectCSSandJS(filePath, injectType, inject)
-        } else if (name in dynamicEntries && (preload as Set<string>).has(dynamicEntries[name])) {
-          const linkType = extensionToType(injectType)
-          if (linkType) {
-            addNewLine(head)
-            head.appendChild(new HTMLElement('link', {}, `rel="preload" href="${filePath}" as="${linkType}"`))
+        } else if (name in dynamicEntries) {
+          const chunkShouldBePreloaded = preload.find(x => x.name === name);
+          if (chunkShouldBePreloaded) {
+            const linkType = extensionToType(injectType)
+            if (linkType) {
+              addNewLine(head)
+              head.appendChild(new HTMLElement('link', {}, `rel="${chunkShouldBePreloaded.type}" href="${filePath}" as="${linkType}"`))
+            }
           }
         }
       })

@@ -25,7 +25,10 @@ export enum ExternalPosition {
   /** Insert after generated entries. */
   after  = 'after',
 }
-
+export type PreloadChunk = {
+  type: 'module' | 'preload' | 'modulepreload',
+  name: string;
+}
 /**
  * Enumeration indicates whether CORS must be used when fetching the resource
  *
@@ -153,7 +156,7 @@ interface IPluginOptions {
    * ['lib']
    * ```
    */
-  preload?:    string[] | Set<string>
+  preload?:    PreloadChunk[]
 
   /**
    * Inject entries as modules. This only works if the output format supports
