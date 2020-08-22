@@ -360,12 +360,15 @@ const html2: RollupPluginHTML2 = ({
         if (name in entries) {
           injectCSSandJS(filePath, injectType, inject)
         } else if (name in dynamicEntries) {
-          const chunkShouldBePreloaded = preload.find(x => x.name === name);
-          if (chunkShouldBePreloaded) {
+          const preloadChunk = preload.find(x => x.name === name);
+          if (preloadChunk) {
+            if (!['module', 'preload', 'modulepreload'].includes(preloadChunk.type)) { 
+              this.error('Preload type should be "module", "preload", "modulepreload"!');
+            }
             const linkType = extensionToType(injectType)
             if (linkType) {
               addNewLine(head)
-              head.appendChild(new HTMLElement('link', {}, `rel="${chunkShouldBePreloaded.type}" href="${filePath}" as="${linkType}"`))
+              head.appendChild(new HTMLElement('link', {}, `rel="${preloadChunk.type}" href="${filePath}" as="${linkType}"`))
             }
           }
         }
