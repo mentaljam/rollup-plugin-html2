@@ -54,6 +54,7 @@ const extensionToType = (
 ): string | null => {
   switch (ext) {
     case 'css': return 'style'
+    case 'mjs':
     case 'js' : return 'script'
     default   : return null
   }
@@ -360,7 +361,7 @@ const html2: RollupPluginHTML2 = ({
         if (name in entries) {
           injectCSSandJS(filePath, injectType, inject)
         } else if (name in dynamicEntries) {
-          const preloadChunk = preload.find(x => x.name === name);
+          const preloadChunk = preload.find(x => x.name === dynamicEntries[name]);
           if (preloadChunk) {
             if (!['module', 'preload', 'modulepreload'].includes(preloadChunk.type)) { 
               this.error('Preload type should be "module", "preload", "modulepreload"!');
