@@ -12,6 +12,7 @@ import {
   Inject,
   InjectType,
   RollupPluginHTML2,
+  PreloadChunkTypeRecord,
 } from './types';
 
 const getChildElement = (node: HTMLElement, tag: string, append = true): HTMLElement => {
@@ -286,22 +287,21 @@ const html2: RollupPluginHTML2 = ({
       const prefix = normalizePrefix(onlinePath);
       // Now process all files and inject only entries and preload files
       files.forEach((file) => {
-        if (!isChunk(file)) return;
-        const { fileName, name } = file;
+        const { fileName } = file;
         const { ext } = path.parse(fileName);
         const filePath = prefix + fileName;
 
         const entryType = extensionToType(ext);
-        if (file.isEntry && entryType) injectCSSandJS(filePath, entryType, inject);
+        if (!isChunk(file)) {
+          if (entryType) injectCSSandJS(filePath, entryType, inject);
+          return;
+        }
+        if (file.isEntry && entryType) {
+          injectCSSandJS(filePath, entryType, inject);
+        }
         if (!preload) return;
-
-        let normalizedPreload: Record<
-          string,
-          {
-            rel: 'module' | 'preload' | 'modulepreload';
-            type: InjectType;
-          }
-        > = {};
+        const { name } = file;
+        let normalizedPreload: PreloadChunkTypeRecord = {};
         if (Array.isArray(preload)) {
           preload.forEach(({ name, type, rel }) => {
             normalizedPreload[name] = { type, rel };
