@@ -349,31 +349,36 @@ const html2: RollupPluginHTML2 = ({
 
     // Inject generated files
     if (inject !== false) {
-      const files = Object.values(bundle)
+      const files = Object.values(bundle);
       // First of all get entries
       const { entries, dynamicEntries } = getEntries(files, preload);
       // Now process all files and inject only entries and preload files
-      const prefix = normalizePrefix(onlinePath)
-      files.forEach(({fileName}) => {
-        const {name, ext} = path.parse(fileName)
-        const injectType  = ext.slice(1)
-        const filePath    = prefix + fileName
-        if (name in entries) {
-          injectCSSandJS(filePath, injectType, inject)
-        } else if (name in dynamicEntries) {
-          const preloadChunk = preload.find(x => x.name === dynamicEntries[name]);
-          if (preloadChunk) {
-            if (!['module', 'preload', 'modulepreload'].includes(preloadChunk.type)) { 
-              this.error('Preload type should be "module", "preload", "modulepreload"!');
-            }
-            const linkType = extensionToType(injectType)
-            if (linkType) {
-              addNewLine(head)
-              head.appendChild(new HTMLElement('link', {}, `rel="${preloadChunk.type}" href="${filePath}" as="${linkType}"`))
-            }
+      const prefix = normalizePrefix(onlinePath);
+      files.forEach(({ fileName }) => {
+        const { name, ext } = path.parse(fileName);
+        const injectType = ext.slice(1);
+        const filePath = prefix + fileName;
+        if (name in entries || name in dynamicEntries) {
+          if (name in entries) injectCSSandJS(filePath, injectType, inject);
+          let preloadChunk = preload.find((x) => x.name === dynamicEntries[name]);
+          if (!preloadChunk) preloadChunk = preload.find((x) => x.name === entries[name]);
+          if (!preloadChunk) return;
+          if (!['module', 'preload', 'modulepreload'].includes(preloadChunk.type)) {
+            this.error('Preload type should be "module", "preload", "modulepreload"!');
+          }
+          const linkType = extensionToType(injectType);
+          if (linkType) {
+            addNewLine(head);
+            head.appendChild(
+              new HTMLElement(
+                'link',
+                {},
+                `rel="${preloadChunk.type}" href="${filePath}" as="${linkType}"`
+              )
+            );
           }
         }
-      })
+      });
     }
 
     // Inject externals after
