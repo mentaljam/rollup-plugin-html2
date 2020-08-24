@@ -35,10 +35,21 @@ const normalizePrefix = (prefix = '') => {
   }
   return prefix;
 };
+
+const extensionToType = (ext: InjectType | string): string | null => {
+  switch (ext) {
+    case '.css':
+      return 'style';
+    case '.js':
+    case '.mjs':
+      return 'script';
+    default:
+      return null;
+  }
+};
 const isChunk = (item: OutputAsset | OutputChunk): item is OutputChunk => item.type === 'chunk';
 
-const formatSupportsModules = (f?: ModuleFormat): boolean =>
-  f === 'es' || f === 'esm' || f === 'module';
+const formatSupportsModules = (f?: ModuleFormat): boolean => f === 'es' || f === 'esm' || f === 'module';
 
 const checkBoolean = (context: PluginContext, name: string, value: unknown): void => {
   const type = typeof value;
@@ -54,9 +65,7 @@ const checkModulesOption = (
   value: boolean | undefined
 ): void => {
   if (value) {
-    context.error(`The \`${name}\` option is set to true but the output.format is ${
-      format as string
-    }, \
+    context.error(`The \`${name}\` option is set to true but the output.format is ${format as string}, \
 consider to use another format or switch off the option`);
   }
 };
@@ -281,7 +290,9 @@ const html2: RollupPluginHTML2 = ({
         const { fileName, name } = file;
         const { ext } = path.parse(fileName);
         const filePath = prefix + fileName;
-        if (file.isEntry) injectCSSandJS(filePath, ext, inject);
+
+        const entryType = extensionToType(ext);
+        if (file.isEntry && entryType) injectCSSandJS(filePath, entryType, inject);
         if (!preload) return;
 
         let normalizedPreload: Record<
@@ -300,9 +311,7 @@ const html2: RollupPluginHTML2 = ({
         if (name in normalizedPreload) {
           const { rel, type } = normalizedPreload[name];
           addNewLine(head);
-          head.appendChild(
-            new HTMLElement('link', {}, `rel="${rel}" href="${filePath}" as="${type}"`)
-          );
+          head.appendChild(new HTMLElement('link', {}, `rel="${rel}" href="${filePath}" as="${type}"`));
         }
       });
     }
