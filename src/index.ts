@@ -133,6 +133,7 @@ const html2: RollupPluginHTML2 = ({
   meta,
   externals,
   preload,
+  exclude = [],
   modules,
   nomodule,
   minify: minifyOptions,
@@ -296,11 +297,11 @@ const html2: RollupPluginHTML2 = ({
           if (entryType) injectCSSandJS(filePath, entryType, inject);
           return;
         }
-        if (file.isEntry && entryType) {
+        const { name } = file;
+        if (file.isEntry && entryType && !exclude.includes(name)) {
           injectCSSandJS(filePath, entryType, inject);
         }
         if (!preload) return;
-        const { name } = file;
         let normalizedPreload: PreloadChunkTypeRecord = {};
         if (Array.isArray(preload)) {
           preload.forEach(({ name, type, rel }) => {
