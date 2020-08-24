@@ -1,34 +1,35 @@
-import {Options as MinifyOptions} from 'html-minifier'
-import {OutputOptions, Plugin} from 'rollup'
-
+import { Options as MinifyOptions } from 'html-minifier';
+import { OutputOptions, Plugin } from 'rollup';
 
 /** Where to inject entries */
-export const enum Inject {
+export type Inject =
   /** Inject to the `<head>` tag. */
-  head = 'head',
+  | 'head'
   /** Inject to the `<body>` tag. */
-  body = 'body',
-}
+  | 'body';
 
 /** Which type of file is injected */
-export const enum InjectType {
-  /** Link to a CSS file. */
-  css = 'css',
-  /** JS script file. */
-  js  = 'js',
-}
-
+export type InjectType = 'script' | 'style';
 /** Where to insert the external */
-export enum ExternalPosition {
+export type ExternalPosition =
   /** Insert before generated entries. */
-  before = 'before',
+  | 'before'
   /** Insert after generated entries. */
-  after  = 'after',
-}
-export type PreloadChunk = {
-  type: 'module' | 'preload' | 'modulepreload',
+  | 'after';
+
+export type PreloadChunkTypeRecord = Record<
+  string,
+  {
+    rel: 'module' | 'preload' | 'modulepreload';
+    type: InjectType;
+  }
+>;
+export type PreloadChunkTypeArray = {
   name: string;
-}
+  rel: 'module' | 'preload' | 'modulepreload';
+  type: InjectType;
+}[];
+export type PreloadChunk = PreloadChunkTypeArray | PreloadChunkTypeRecord;
 /**
  * Enumeration indicates whether CORS must be used when fetching the resource
  *
@@ -37,28 +38,26 @@ export type PreloadChunk = {
  *
  * [Details](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
  */
-export enum Crossorigin {
+export type Crossorigin =
   /** A cross-origin request is performed, but no credential is sent. */
-  anonymous      = 'anonymous',
+  | 'anonymous'
   /** A cross-origin request is performed along with a credential sent. */
-  usecredentials = 'use-credentials',
-}
+  | 'use-credentials';
 
 /** An external resource configuration */
 export interface IExternal {
   /** Whether CORS must be used when fetching the resource. */
-  crossorigin?: Crossorigin
+  crossorigin?: Crossorigin;
   /** A file or a link to the resource. */
-  file:         string
+  file: string;
   /** Where to insert the external. */
-  pos:          ExternalPosition
+  pos: ExternalPosition;
   /** Which type of file is inserted. */
-  type?:        InjectType
+  type?: InjectType;
 }
 
 /** HTML2 Plugin Options */
 interface IPluginOptions {
-
   /**
    * A path to an HTML template file or an HTML string.
    *
@@ -72,7 +71,7 @@ interface IPluginOptions {
    * '<html lang="en"><head><meta charset="utf-8"></head><body></body></html>'
    * ```
    */
-  template:    string
+  template: string;
 
   /**
    * A file name of the resulting HTML document.
@@ -89,30 +88,30 @@ interface IPluginOptions {
    * 'index.html'
    * ```
    */
-  fileName?:   string
+  fileName?: string;
 
-  /** 
+  /**
    * @deprecated Use [[fileName]] instead.
    */
-  file?:       string
+  file?: string;
 
   /**
    * Defines where to inject bundled files. If `undefined` then links to CSS
    * files are injected to the `<head>` and scripts are injected to the
    * `<body>`. If set to `false` then bundled files are not injected.
    */
-  inject?:     false | Inject
+  inject?: false | Inject;
 
   /**
    * Sets the title of the output HTML document.
    */
-  title?:      string
+  title?: string;
 
   /**
    * A file path of the favicon of the output HTML document. The provided file
    * will be emitted as an asset.
    */
-  favicon?:    string
+  favicon?: string;
 
   /**
    * A set of metadata of the output HTML document. The provided object is
@@ -125,7 +124,7 @@ interface IPluginOptions {
    * }
    * ```
    */
-  meta?:       Record<string, string>
+  meta?: Record<string, string>;
 
   /**
    * An array of additional files that will be injected to the output HTML
@@ -145,7 +144,7 @@ interface IPluginOptions {
    * }]
    * ```
    * */
-  externals?:  IExternal[]
+  externals?: IExternal[];
 
   /**
    * An array or a set of names of dynamic chunks that will be injected to the
@@ -156,7 +155,7 @@ interface IPluginOptions {
    * ['lib']
    * ```
    */
-  preload?:    PreloadChunk[]
+  preload?: PreloadChunk;
 
   /**
    * Inject entries as modules. This only works if the output format supports
@@ -164,7 +163,7 @@ interface IPluginOptions {
    *
    * ⚠️ Either [[modules]] or [[nomodule]] can be set at the same time.
    */
-  modules?:    boolean
+  modules?: boolean;
 
   /**
    * Add the `nomodule` attribute to the injected entries. This only works if
@@ -172,7 +171,7 @@ interface IPluginOptions {
    *
    * ⚠️ Either [[modules]] or [[nomodule]] can be set at the same time.
    */
-  nomodule?:   boolean
+  nomodule?: boolean;
 
   /**
    * [Options](https://github.com/kangax/html-minifier#options-quick-reference)
@@ -189,7 +188,7 @@ interface IPluginOptions {
    * }
    * ```
    */
-  minify?:     false | MinifyOptions
+  minify?: false | MinifyOptions;
 
   /**
    * A path to append to file references injected. This is useful for putting
@@ -204,11 +203,11 @@ interface IPluginOptions {
    * <script src="//www.example.com/foo/main.js"></script>
    * ```
    */
-  onlinePath?: string
+  onlinePath?: string;
 }
 
 /** Factory for the HTML2 plugin */
-export type RollupPluginHTML2 = (options: IPluginOptions) => Plugin
+export type RollupPluginHTML2 = (options: IPluginOptions) => Plugin;
 
 /**
  * Interface for the extended output options
@@ -216,8 +215,8 @@ export type RollupPluginHTML2 = (options: IPluginOptions) => Plugin
  * The interface is use by the
  * [favicons plugin](https://github.com/mentaljam/rollup-plugin-favicons)
  * to pass generated tags to the HTML2 plugin.
-*/
+ */
 export interface IExtendedOptions extends OutputOptions {
   /** Output of the `rollup-plugin-favicons` */
-  __favicons_output?: string[]
+  __favicons_output?: string[];
 }
