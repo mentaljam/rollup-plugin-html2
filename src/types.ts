@@ -204,6 +204,8 @@ interface IPluginOptions {
    * ```
    */
   onlinePath?: string;
+
+  exclude?: string[];
 }
 
 /** Factory for the HTML2 plugin */
