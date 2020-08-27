@@ -96,7 +96,6 @@ const injectCSSandJSFactory = (
       if (injectCssType === "link") {
         parent.appendChild(new HTMLElement("link", {}, `rel="stylesheet" ${cors}href="${file.fileName}"`));
       } else {
-        console.log("inject", file.fileName, file.type);
         if (file.type === "asset") {
           const styleEl = new HTMLElement("style", {});
           styleEl.set_content(file.source.toString());
@@ -123,7 +122,6 @@ const extrenalsProcessorFactory = (
   }
   return (processPos) => {
     for (const { pos, file, type, crossorigin } of externals) {
-      console.log("externalProcess", file.fileName);
       if (pos === processPos) {
         injectCSSandJS(file, type || path.extname(file.fileName).slice(1), undefined, crossorigin);
       }
