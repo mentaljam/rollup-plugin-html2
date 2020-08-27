@@ -1,8 +1,8 @@
-import * as fs from 'fs';
-import { minify } from 'html-minifier';
-import { HTMLElement, parse, TextNode } from 'node-html-parser';
-import * as path from 'path';
-import { ModuleFormat, OutputAsset, OutputChunk, PluginContext } from 'rollup';
+import * as fs from "fs";
+import { minify } from "html-minifier";
+import { HTMLElement, parse, TextNode } from "node-html-parser";
+import * as path from "path";
+import { ModuleFormat, OutputAsset, OutputChunk, PluginContext } from "rollup";
 
 import {
   Crossorigin,
@@ -13,7 +13,8 @@ import {
   InjectType,
   RollupPluginHTML2,
   PreloadChunkTypeRecord,
-} from './types';
+  InjectCSSType,
+} from "./types";
 
 const getChildElement = (node: HTMLElement, tag: string, append = true): HTMLElement => {
   let child = node.querySelector(tag);
@@ -28,33 +29,33 @@ const getChildElement = (node: HTMLElement, tag: string, append = true): HTMLEle
   return child;
 };
 
-const addNewLine = (node: HTMLElement): TextNode => node.appendChild(new TextNode('\n  '));
+const addNewLine = (node: HTMLElement): TextNode => node.appendChild(new TextNode("\n  "));
 
-const normalizePrefix = (prefix = '') => {
-  if (prefix && !prefix.endsWith('/')) {
-    prefix += '/';
+const normalizePrefix = (prefix = "") => {
+  if (prefix && !prefix.endsWith("/")) {
+    prefix += "/";
   }
   return prefix;
 };
 
 const extensionToType = (ext: InjectType | string): string | null => {
   switch (ext) {
-    case '.css':
-      return 'style';
-    case '.js':
-    case '.mjs':
-      return 'script';
+    case ".css":
+      return "style";
+    case ".js":
+    case ".mjs":
+      return "script";
     default:
       return null;
   }
 };
-const isChunk = (item: OutputAsset | OutputChunk): item is OutputChunk => item.type === 'chunk';
+const isChunk = (item: OutputAsset | OutputChunk): item is OutputChunk => item.type === "chunk";
 
-const formatSupportsModules = (f?: ModuleFormat): boolean => f === 'es' || f === 'esm' || f === 'module';
+const formatSupportsModules = (f?: ModuleFormat): boolean => f === "es" || f === "esm" || f === "module";
 
 const checkBoolean = (context: PluginContext, name: string, value: unknown): void => {
   const type = typeof value;
-  if (type !== 'boolean' && type !== 'undefined') {
+  if (type !== "boolean" && type !== "undefined") {
     context.error(`Invalid \`${name}\` argument: ${JSON.stringify(value)}`);
   }
 };
@@ -72,7 +73,7 @@ consider to use another format or switch off the option`);
 };
 
 type InjectCSSAndJS = (
-  fileName: string,
+  file: OutputAsset | OutputChunk,
   type: InjectType | string,
   pos?: Inject,
   crossorigin?: Crossorigin
@@ -82,20 +83,30 @@ const injectCSSandJSFactory = (
   head: HTMLElement,
   body: HTMLElement,
   modules: boolean | undefined,
-  nomodule: boolean | undefined
+  nomodule: boolean | undefined,
+  injectCssType: InjectCSSType
 ): InjectCSSAndJS => {
-  const moduleattr = modules ? 'type="module" ' : nomodule ? 'nomodule ' : '';
+  const moduleattr = modules ? 'type="module" ' : nomodule ? "nomodule " : "";
 
-  return (fileName, type, pos, crossorigin): void => {
-    const cors = crossorigin ? `crossorigin="${crossorigin}" ` : '';
-    if (type === 'style') {
-      const parent = pos === 'body' ? body : head;
+  return (file, type, pos, crossorigin): void => {
+    const cors = crossorigin ? `crossorigin="${crossorigin}" ` : "";
+    if (type === "style") {
+      const parent = pos === "body" ? body : head;
       addNewLine(parent);
-      parent.appendChild(new HTMLElement('link', {}, `rel="stylesheet" ${cors}href="${fileName}"`));
+      if (injectCssType === "link") {
+        parent.appendChild(new HTMLElement("link", {}, `rel="stylesheet" ${cors}href="${file.fileName}"`));
+      } else {
+        console.log("inject", file.fileName, file.type);
+        if (file.type === "asset") {
+          const styleEl = new HTMLElement("style", {});
+          styleEl.set_content(file.source.toString());
+          head.appendChild(styleEl);
+        }
+      }
     } else {
-      const parent = pos === 'head' ? head : body;
+      const parent = pos === "head" ? head : body;
       addNewLine(parent);
-      parent.appendChild(new HTMLElement('script', {}, `${moduleattr}${cors}src="${fileName}"`));
+      parent.appendChild(new HTMLElement("script", {}, `${moduleattr}${cors}src="${file.fileName}"`));
     }
   };
 };
@@ -108,19 +119,20 @@ const extrenalsProcessorFactory = (
 ): ExtrenalsProcessor => {
   if (!externals) {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    return (): void => {};
+    return () => {};
   }
-  return (processPos): void => {
+  return (processPos) => {
     for (const { pos, file, type, crossorigin } of externals) {
+      console.log("externalProcess", file.fileName);
       if (pos === processPos) {
-        injectCSSandJS(file, type || path.extname(file).slice(1), undefined, crossorigin);
+        injectCSSandJS(file, type || path.extname(file.fileName).slice(1), undefined, crossorigin);
       }
     }
   };
 };
 
 const enum Cache {
-  templateIsFile = 'templateIsFile',
+  templateIsFile = "templateIsFile",
 }
 
 const html2: RollupPluginHTML2 = ({
@@ -128,6 +140,7 @@ const html2: RollupPluginHTML2 = ({
   file: deprecatedFileOption,
   fileName: htmlFileName,
   inject,
+  injectCssType,
   title,
   favicon,
   meta,
@@ -140,17 +153,17 @@ const html2: RollupPluginHTML2 = ({
   onlinePath,
   ...options
 }) => ({
-  name: 'html2',
+  name: "html2",
 
-  buildStart(): void {
+  buildStart() {
     if (deprecatedFileOption) {
-      this.error('The `file` option is deprecated, use the `fileName` instead.');
+      this.error("The `file` option is deprecated, use the `fileName` instead.");
     }
     const templateIsFile = fs.existsSync(template);
     if (templateIsFile && fs.lstatSync(template).isFile()) {
       this.addWatchFile(template);
     } else if (!htmlFileName) {
-      this.error('When `template` is an HTML string the `fileName` option must be defined');
+      this.error("When `template` is an HTML string the `fileName` option must be defined");
     }
     this.cache.set(Cache.templateIsFile, templateIsFile);
 
@@ -158,23 +171,23 @@ const html2: RollupPluginHTML2 = ({
       this.error("The provided favicon file does't exist");
     }
 
-    if (typeof inject === 'string' && !(inject === 'head' || inject === 'body')) {
-      this.error('Invalid inject argument: ' + (inject as string));
+    if (typeof inject === "string" && !(inject === "head" || inject === "body")) {
+      this.error("Invalid inject argument: " + (inject as string));
     }
 
     if (externals) {
       for (const { pos, crossorigin } of externals) {
-        if (pos && pos !== 'before' && pos !== 'after') {
-          this.error('Invalid position for the extrenal: ' + (pos as string));
+        if (pos && pos !== "before" && pos !== "after") {
+          this.error("Invalid position for the extrenal: " + (pos as string));
         }
-        if (crossorigin && crossorigin !== 'anonymous' && crossorigin !== 'use-credentials') {
-          this.error('Invalid crossorigin argument for the extrenal: ' + (crossorigin as string));
+        if (crossorigin && crossorigin !== "anonymous" && crossorigin !== "use-credentials") {
+          this.error("Invalid crossorigin argument for the extrenal: " + (crossorigin as string));
         }
       }
     }
 
-    checkBoolean(this, 'modules', modules);
-    checkBoolean(this, 'nomodule', nomodule);
+    checkBoolean(this, "modules", modules);
+    checkBoolean(this, "nomodule", nomodule);
 
     Object.keys(options).forEach((o) => this.warn(`Ignoring unknown option "${o}"`));
   },
@@ -197,15 +210,15 @@ const html2: RollupPluginHTML2 = ({
       }
     }
     if (modules && nomodule) {
-      this.error('Options `modules` and `nomodule` cannot be set at the same time');
+      this.error("Options `modules` and `nomodule` cannot be set at the same time");
     }
     const modulesSupport = formatSupportsModules(format);
-    checkModulesOption(this, 'modules', format, modules && !modulesSupport);
-    checkModulesOption(this, 'nomodule', format, nomodule && modulesSupport);
+    checkModulesOption(this, "modules", format, modules && !modulesSupport);
+    checkModulesOption(this, "nomodule", format, nomodule && modulesSupport);
     return null;
   },
 
-  generateBundle(output, bundle): void {
+  generateBundle(output, bundle) {
     const data = this.cache.get<boolean>(Cache.templateIsFile)
       ? fs.readFileSync(template).toString()
       : template;
@@ -216,22 +229,22 @@ const html2: RollupPluginHTML2 = ({
       style: true,
     }) as HTMLElement & { valid: boolean };
     if (!doc.valid) {
-      this.error('Error parsing template');
+      this.error("Error parsing template");
     }
 
-    const html = doc.querySelector('html');
+    const html = doc.querySelector("html");
     if (!html) {
       this.error("The input template doesn't contain the `html` tag");
     }
 
-    const head = getChildElement(html, 'head', false);
-    const body = getChildElement(html, 'body');
+    const head = getChildElement(html, "head", false);
+    const body = getChildElement(html, "body");
 
     if (meta) {
-      const nodes = head.querySelectorAll('meta');
+      const nodes = head.querySelectorAll("meta");
       Object.entries(meta).forEach(([name, content]) => {
         const oldMeta = nodes.find((n) => n.attributes.name === name);
-        const newMeta = new HTMLElement('meta', {}, `name="${name}" content="${content}"`);
+        const newMeta = new HTMLElement("meta", {}, `name="${name}" content="${content}"`);
         if (oldMeta) {
           head.exchangeChild(oldMeta, newMeta);
         } else {
@@ -248,21 +261,21 @@ const html2: RollupPluginHTML2 = ({
     });
 
     if (title) {
-      let node = head.querySelector('title');
+      let node = head.querySelector("title");
       if (!node) {
         addNewLine(head);
-        node = new HTMLElement('title', {});
+        node = new HTMLElement("title", {});
         head.appendChild(node);
       }
       node.set_content(title);
     }
 
     if (favicon) {
-      const nodes = head.querySelectorAll('link');
-      const rel = 'shortcut icon';
+      const nodes = head.querySelectorAll("link");
+      const rel = "shortcut icon";
       const oldLink = nodes.find((n) => n.attributes.rel === rel);
       const fileName = path.basename(favicon);
-      const newLink = new HTMLElement('link', {}, `rel="${rel}" href="${fileName}"`);
+      const newLink = new HTMLElement("link", {}, `rel="${rel}" href="${fileName}"`);
       if (oldLink) {
         head.exchangeChild(oldLink, newLink);
       } else {
@@ -272,15 +285,15 @@ const html2: RollupPluginHTML2 = ({
       this.emitFile({
         fileName,
         source: fs.readFileSync(favicon),
-        type: 'asset',
+        type: "asset",
       });
     }
 
-    const injectCSSandJS = injectCSSandJSFactory(head, body, modules, nomodule);
+    const injectCSSandJS = injectCSSandJSFactory(head, body, modules, nomodule, injectCssType);
     const processExternals = extrenalsProcessorFactory(injectCSSandJS, externals);
 
     // Inject externals before
-    processExternals('before');
+    processExternals("before");
 
     // Inject generated files
     if (inject !== false) {
@@ -294,12 +307,12 @@ const html2: RollupPluginHTML2 = ({
 
         const entryType = extensionToType(ext);
         if (!isChunk(file)) {
-          if (entryType) injectCSSandJS(filePath, entryType, inject);
+          if (entryType) injectCSSandJS(file, entryType, inject);
           return;
         }
         const { name } = file;
         if (file.isEntry && entryType && !exclude.includes(name)) {
-          injectCSSandJS(filePath, entryType, inject);
+          injectCSSandJS(file, entryType, inject);
         }
         if (!preload) return;
         let normalizedPreload: PreloadChunkTypeRecord = {};
@@ -312,14 +325,14 @@ const html2: RollupPluginHTML2 = ({
         if (name in normalizedPreload) {
           const { rel, type } = normalizedPreload[name];
           addNewLine(head);
-          head.appendChild(new HTMLElement('link', {}, `rel="${rel}" href="${filePath}" as="${type}"`));
+          head.appendChild(new HTMLElement("link", {}, `rel="${rel}" href="${filePath}" as="${type}"`));
         }
       });
     }
     // Inject externals after
-    processExternals('after');
+    processExternals("after");
 
-    let source = '<!doctype html>\n' + doc.toString();
+    let source = "<!doctype html>\n" + doc.toString();
 
     if (minifyOptions) {
       source = minify(source, minifyOptions);
@@ -329,7 +342,7 @@ const html2: RollupPluginHTML2 = ({
     this.emitFile({
       fileName: path.basename(htmlFileName as string),
       source,
-      type: 'asset',
+      type: "asset",
     });
   },
 });

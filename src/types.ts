@@ -1,32 +1,32 @@
-import { Options as MinifyOptions } from 'html-minifier';
-import { OutputOptions, Plugin } from 'rollup';
+import { Options as MinifyOptions } from "html-minifier";
+import { OutputOptions, Plugin, OutputAsset } from "rollup";
 
 /** Where to inject entries */
 export type Inject =
   /** Inject to the `<head>` tag. */
-  | 'head'
+  | "head"
   /** Inject to the `<body>` tag. */
-  | 'body';
+  | "body";
 
 /** Which type of file is injected */
-export type InjectType = 'script' | 'style';
+export type InjectType = "script" | "style";
 /** Where to insert the external */
 export type ExternalPosition =
   /** Insert before generated entries. */
-  | 'before'
+  | "before"
   /** Insert after generated entries. */
-  | 'after';
+  | "after";
 
 export type PreloadChunkTypeRecord = Record<
   string,
   {
-    rel: 'module' | 'preload' | 'modulepreload';
+    rel: "module" | "preload" | "modulepreload";
     type: InjectType;
   }
 >;
 export type PreloadChunkTypeArray = {
   name: string;
-  rel: 'module' | 'preload' | 'modulepreload';
+  rel: "module" | "preload" | "modulepreload";
   type: InjectType;
 }[];
 export type PreloadChunk = PreloadChunkTypeArray | PreloadChunkTypeRecord;
@@ -40,22 +40,22 @@ export type PreloadChunk = PreloadChunkTypeArray | PreloadChunkTypeRecord;
  */
 export type Crossorigin =
   /** A cross-origin request is performed, but no credential is sent. */
-  | 'anonymous'
+  | "anonymous"
   /** A cross-origin request is performed along with a credential sent. */
-  | 'use-credentials';
+  | "use-credentials";
 
 /** An external resource configuration */
 export interface IExternal {
   /** Whether CORS must be used when fetching the resource. */
   crossorigin?: Crossorigin;
   /** A file or a link to the resource. */
-  file: string;
+  file: OutputAsset;
   /** Where to insert the external. */
   pos: ExternalPosition;
   /** Which type of file is inserted. */
   type?: InjectType;
 }
-
+export type InjectCSSType = "style" | "link" | undefined;
 /** HTML2 Plugin Options */
 interface IPluginOptions {
   /**
@@ -102,6 +102,10 @@ interface IPluginOptions {
    */
   inject?: false | Inject;
 
+  /**
+   * Sets how file should be injected: in <style> attribute or in link to file
+   */
+  injectCssType?: InjectCSSType;
   /**
    * Sets the title of the output HTML document.
    */
