@@ -19,7 +19,6 @@
     "README.md"
   ],
   "scripts": {
-    "prebuild": "pnpm run lint",
     "build": "rollup -c",
     "docs": "npx typedoc src/types.ts && npx gh-pages -d docs",
     "lint": "eslint src/*.ts -f visualstudio",
