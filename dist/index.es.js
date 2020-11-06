@@ -69,7 +69,7 @@ const injectCSSandJSFactory = (head, body, modules, nomodule, injectCssType) => 
         else {
             const parent = pos === "head" ? head : body;
             addNewLine(parent);
-            parent.appendChild(new HTMLElement("script", {}, `${moduleattr}${cors}src="${file.fileName}"`));
+            parent.appendChild(new HTMLElement("script", {}, `${moduleattr}${cors}src="/${file.fileName}"`));
         }
     };
 };

@@ -105,7 +105,7 @@ const injectCSSandJSFactory = (
     } else {
       const parent = pos === "head" ? head : body;
       addNewLine(parent);
-      parent.appendChild(new HTMLElement("script", {}, `${moduleattr}${cors}src="${file.fileName}"`));
+      parent.appendChild(new HTMLElement("script", {}, `${moduleattr}${cors}src="/${file.fileName}"`));
     }
   };
 };
