@@ -1,3 +1,5 @@
+> # :warning: This repository is unmaintained! You are welcome to continue the development of rollup-plugin-html2. Please contact me about transfering the ownership on npmjs.org.
+
 # rollup-plugin-html2
 
 [Rollup](https://github.com/rollup/rollup) plugin to inject bundled files to an HTML template.
