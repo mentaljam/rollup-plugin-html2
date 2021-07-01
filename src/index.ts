@@ -104,13 +104,6 @@ const formatSupportsModules = (
   || f === 'module'
 )
 
-const checkEnum = <T, E extends Record<string, T>>(
-  enumobj: E,
-  val?: T,
-): boolean => (
-  !val || Object.values(enumobj).includes(val)
-)
-
 const checkBoolean = (
   context: PluginContext,
   name:    string,
@@ -159,12 +152,12 @@ const injectCSSandJSFactory = (
     crossorigin,
   ): void => {
     const cors = crossorigin ? `crossorigin="${crossorigin}" ` : ''
-    if (type === InjectType.css) {
-      const parent = pos === Inject.body ? body : head
+    if (type === 'css') {
+      const parent = pos === 'body' ? body : head
       addNewLine(parent)
       parent.appendChild(new HTMLElement('link', {}, `rel="stylesheet" ${cors}href="${fileName}"`))
     } else {
-      const parent = pos === Inject.head ? head : body
+      const parent = pos === 'head' ? head : body
       addNewLine(parent)
       parent.appendChild(new HTMLElement('script', {}, `${moduleattr}${cors}src="${fileName}"`))
     }
@@ -228,16 +221,16 @@ const html2: RollupPluginHTML2 = ({
       this.error('The provided favicon file does\'t exist')
     }
 
-    if (typeof inject === 'string' && !(inject === Inject.head || inject === Inject.body)) {
+    if (typeof inject === 'string' && !(inject === 'head' || inject === 'body')) {
       this.error('Invalid inject argument: ' + (inject as string))
     }
 
     if (externals) {
       for (const {pos, crossorigin} of externals) {
-        if (!checkEnum(ExternalPosition, pos)) {
-          this.error('Invalid position for the extrenal: ' + pos)
+        if (pos && pos !== 'after' && pos !== 'before') {
+          this.error('Invalid position for the extrenal: ' + (pos as string))
         }
-        if (!checkEnum(Crossorigin, crossorigin)) {
+        if (crossorigin && crossorigin !== 'anonymous' && crossorigin !== 'use-credentials') {
           this.error('Invalid crossorigin argument for the extrenal: ' + (crossorigin as string))
         }
       }
@@ -348,7 +341,7 @@ const html2: RollupPluginHTML2 = ({
     const processExternals = extrenalsProcessorFactory(injectCSSandJS, externals)
 
     // Inject externals before
-    processExternals(ExternalPosition.before)
+    processExternals('before')
 
     // Inject generated files
     if (inject !== false) {
@@ -378,7 +371,7 @@ const html2: RollupPluginHTML2 = ({
     }
 
     // Inject externals after
-    processExternals(ExternalPosition.after)
+    processExternals('after')
 
     let source = '<!doctype html>\n' + doc.toString()
 
