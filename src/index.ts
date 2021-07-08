@@ -292,11 +292,13 @@ or change the \`type\``)
       node.set_content(title)
     }
 
+    const prefix = normalizePrefix(onlinePath)
+
     if (favicon) {
       const nodes    = head.querySelectorAll('link')
       const rel      = 'shortcut icon'
       const oldLink  = nodes.find(n => n.attributes.rel === rel)
-      const fileName = path.basename(favicon)
+      const fileName = prefix + path.basename(favicon)
       const newLink  = new HTMLElement('link', {}, `rel="${rel}" href="${fileName}"`)
       if (oldLink) {
         head.exchangeChild(oldLink, newLink)
@@ -329,7 +331,6 @@ or change the \`type\``)
 
     // Inject generated files
     if (inject) {
-      const prefix = normalizePrefix(onlinePath)
       if (Array.isArray(exclude)) {
         exclude = new Set(exclude)
       }
