@@ -46,7 +46,7 @@ interface ISrcScript extends IScript {
 
 /** Injected script with the text child node */
 export interface ITextScript extends IScript {
-  /** A text of the script. */
+  /** Script text. */
   text:          string
 }
 
