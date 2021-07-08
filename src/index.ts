@@ -16,7 +16,7 @@ import {
   RollupPluginHTML2,
 } from './types'
 
-const addNewLine = (node: HTMLElement): TextNode => node.appendChild(new TextNode('\n  '))
+const addNewLine = (node: HTMLElement): TextNode => node.appendChild(new TextNode('\n  ', node))
 
 const getChildElement = (
   node: HTMLElement,
@@ -25,7 +25,7 @@ const getChildElement = (
 ): HTMLElement => {
   let child = node.querySelector(tag)
   if (!child) {
-    child = new HTMLElement(tag, {})
+    child = new HTMLElement(tag, {}, '', node)
     if (append) {
       node.appendChild(child)
     } else {
@@ -86,10 +86,10 @@ set to "preload" but no `as` option defined')
   }, '')
   const parent = tag === 'script' ? body : head
   addNewLine(parent)
-  const entry = new HTMLElement(tag, {}, attrsstr)
+  const entry = new HTMLElement(tag, {}, attrsstr, parent)
   parent.appendChild(entry)
   if (text) {
-    entry.appendChild(new TextNode(text))
+    entry.appendChild(new TextNode(text, entry))
   }
 }
 
@@ -244,15 +244,7 @@ or change the \`type\``)
       ? fs.readFileSync(template).toString()
       : template
 
-    const doc = parse(data, {
-      pre:    true,
-      script: true,
-      style:  true,
-    })
-    if (!doc.valid) {
-      this.error('Error parsing template')
-    }
-
+    const doc = parse(data)
     const html = doc.querySelector('html')
     if (!html) {
       this.error("The input template doesn't contain the `html` tag")
@@ -265,7 +257,7 @@ or change the \`type\``)
       const nodes = head.querySelectorAll('meta')
       for (const [name, content] of Object.entries(meta)) {
         const oldMeta = nodes.find(n => n.attributes.name === name)
-        const newMeta = new HTMLElement('meta', {}, `name="${name}" content="${content}"`)
+        const newMeta = new HTMLElement('meta', {}, `name="${name}" content="${content}"`, head)
         if (oldMeta) {
           head.exchangeChild(oldMeta, newMeta)
         } else {
@@ -278,7 +270,7 @@ or change the \`type\``)
     // Inject favicons from the [rollup-plugin-favicons](https://github.com/mentaljam/rollup-plugin-favicons)
     const {__favicons_output: favicons = []} = output as IExtendedOptions
     for (const f of favicons) {
-      head.appendChild(new TextNode(f))
+      head.appendChild(new TextNode(f, head))
       addNewLine(head)
     }
 
@@ -286,8 +278,7 @@ or change the \`type\``)
       let node = head.querySelector('title')
       if (!node) {
         addNewLine(head)
-        node = new HTMLElement('title', {})
-        head.appendChild(node)
+        node = new HTMLElement('title', {}, '', head)
       }
       node.set_content(title)
     }
@@ -299,7 +290,7 @@ or change the \`type\``)
       const rel      = 'shortcut icon'
       const oldLink  = nodes.find(n => n.attributes.rel === rel)
       const fileName = prefix + path.basename(favicon)
-      const newLink  = new HTMLElement('link', {}, `rel="${rel}" href="${fileName}"`)
+      const newLink  = new HTMLElement('link', {}, `rel="${rel}" href="${fileName}"`, head)
       if (oldLink) {
         head.exchangeChild(oldLink, newLink)
       } else {
