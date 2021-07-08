@@ -84,7 +84,7 @@ set to "preload" but no `as` option defined')
     prev += ' '
     return prev
   }, '')
-  const parent = isLink ? head : body
+  const parent = tag === 'script' ? body : head
   addNewLine(parent)
   const entry = new HTMLElement(tag, {}, attrsstr)
   parent.appendChild(entry)
@@ -168,9 +168,9 @@ const html2: RollupPluginHTML2 = ({
     }
 
     const check = ({tag, ...others}: Entry | External) => {
-      if (tag && tag !== 'link' && tag !== 'script') {
+      if (tag && tag !== 'link' && tag !== 'script' && tag !== 'style') {
         this.error(`Invalid value for the \`tag\` option: \
-must be one of "link" or "script"; received ${JSON.stringify(tag)}`)
+must be one of "link", "script" or "style"; received ${JSON.stringify(tag)}`)
       }
       const nmt = typeof others.nomodule
       if (nmt !== 'boolean' && nmt !== 'undefined') {
@@ -178,7 +178,12 @@ must be one of "link" or "script"; received ${JSON.stringify(tag)}`)
 must be one of \`boolean\`, \`undefined\`; received ${JSON.stringify(others.nomodule)}`)
       }
     }
-    Object.values(entries).forEach(check)
+    for (const e of Object.values(entries)) {
+      check(e)
+      if (e.tag as unknown === 'style') {
+        this.error('An entry cannot have a `tag` property set to "style"')
+      }
+    }
     const {
       before = [],
       after  = [],

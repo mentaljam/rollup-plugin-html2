@@ -5,6 +5,7 @@ import {OutputOptions, Plugin} from 'rollup'
 type InjectTag =
   | 'script'
   | 'link'
+  | 'style'
 
 /**
  * Types indicates whether CORS must be used when fetching the resource
@@ -73,8 +74,15 @@ interface IExternalLink extends ILink {
   href: string
 }
 
+/** Injected style */
+interface IStyle extends IInjected {
+  tag:           'style'
+  /** Style text. */
+  text:          string
+}
+
 /** External (not generated) and injected resource */
-export type External = ExternalScript | IExternalLink
+export type External = ExternalScript | IExternalLink | IStyle
 
 /** HTML2 Plugin Options */
 export interface IPluginOptions {
@@ -194,6 +202,15 @@ export interface IPluginOptions {
    *     crossorigin: 'use-credentials',
    *   }],
    *   after: [{
+   *     tag:  'style',
+   *     text: `
+   *       body {
+   *         margin:  0;
+   *         height:  calc(100vh - 1px);
+   *         display: flex;
+   *       }
+   *     `,
+   *   }, {
    *     tag:  'script',
    *     text: 'console.log("Hello from external code!")',
    *   }],
