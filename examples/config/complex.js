@@ -19,16 +19,30 @@ export default {
       meta: {
         description: 'A complex usage example for the rollup-plugin-html2',
       },
-      externals: [{
-        file: 'https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css',
-        pos: 'before',
-        crossorigin: 'use-credentials',
-      }],
-      preload: ['lib'],
+      externals: {
+        before: [{
+          tag:  'link',
+          href: 'https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css',
+          crossorigin: 'use-credentials',
+        }],
+        after: [{
+          tag:  'script',
+          text: 'console.log("Hello from external code!")',
+        }],
+      },
+      entries: {
+        index: {
+          type: 'module',
+        },
+        lib: {
+          rel: 'preload',
+          as:  'script',
+        }
+      },
       minify: {
-        removeComments: true,
+        removeComments:     true,
         collapseWhitespace: true,
-        keepClosingSlash: true,
+        keepClosingSlash:   true,
       },
     }),
   ],

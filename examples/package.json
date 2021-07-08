@@ -4,7 +4,7 @@
   "description": "Usage examples for the rollup-plugin-html2.",
   "scripts": {
     "build:complex": "rollup -c config/complex.js",
-    "build:nomodule": "rollup -c config/nomodule.js",
+    "build:nomodule": "node config/nomodule.mjs",
     "build": "npm run build:complex & npm run build:nomodule"
   },
   "author": "Petr Tsymbarovich <petr@tsymbarovich.ru>",
