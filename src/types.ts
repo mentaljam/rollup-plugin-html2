@@ -1,29 +1,10 @@
 import {Options as MinifyOptions} from 'html-minifier'
 import {OutputOptions, Plugin} from 'rollup'
 
-
-/** Where to inject entries */
-export type Inject =
-  /** Inject to the `<head>` tag. */
-  | 'head'
-  /** Inject to the `<body>` tag. */
-  | 'body'
-
-
-/** Which type of file is injected */
-export type InjectType =
-  /** Link to a CSS file. */
-  | 'css'
-  /** JS script file. */
-  | 'js'
-
-
-/** Where to insert the external */
-export type ExternalPosition =
-  /** Insert before generated entries. */
-  | 'before'
-  /** Insert after generated entries. */
-  | 'after'
+/** Which tag to inject */
+type InjectTag =
+  | 'script'
+  | 'link'
 
 /**
  * Types indicates whether CORS must be used when fetching the resource
@@ -33,28 +14,70 @@ export type ExternalPosition =
  *
  * [Details](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
  */
-export type Crossorigin =
+type Crossorigin =
   /** A cross-origin request is performed, but no credential is sent. */
   | 'anonymous'
   /** A cross-origin request is performed along with a credential sent. */
   | 'use-credentials'
 
-
-/** An external resource configuration */
-export interface IExternal {
+/** Configuration for an injected entry or external resource */
+interface IInjected extends Record<string, unknown> {
+  /** Which tag to use for injection. */
+  tag?:          InjectTag
   /** Whether CORS must be used when fetching the resource. */
-  crossorigin?: Crossorigin
-  /** A file or a link to the resource. */
-  file:         string
-  /** Where to insert the external. */
-  pos:          ExternalPosition
-  /** Which type of file is inserted. */
-  type?:        InjectType
+  crossorigin?:  Crossorigin
+  /** The type of script represented for [[IScript]] or the content linked to for [[ILink]] */
+  type?:         string
 }
 
-/** HTML2 Plugin Options */
-interface IPluginOptions {
+/** Injected script */
+interface IScript extends IInjected {
+  tag:           'script'
+  /** Whether to add or not the `nomodule` attribute. */
+  nomodule?:     boolean
+}
 
+/** Injected script with the `src` attribute set */
+interface ISrcScript extends IScript {
+  /** A file or a link to the script. */
+  src:           string
+}
+
+/** Injected script with the text child node */
+export interface ITextScript extends IScript {
+  /** A text of the script. */
+  text:          string
+}
+
+/** External (not generated) script */
+export type ExternalScript = ISrcScript | ITextScript
+
+/** Injected link */
+interface ILink extends IInjected {
+  tag:           'link'
+  /** Relationship of the linked document. */
+  rel?:          string
+  /**
+   * Specifies the type of content being loaded \
+   * when [[rel]] is set to `"preload"` or `"prefetch"`.
+   */
+  as?:           string
+}
+
+/** Generated and injected entry */
+export type Entry  = IScript | ILink
+
+/** External (not generated) and injected link */
+interface IExternalLink extends ILink {
+  /** A link to the external resource. */
+  href: string
+}
+
+/** External (not generated) and injected resource */
+export type External = ExternalScript | IExternalLink
+
+/** HTML2 Plugin Options */
+export interface IPluginOptions {
   /**
    * A path to an HTML template file or an HTML string.
    *
@@ -88,16 +111,15 @@ interface IPluginOptions {
   fileName?:   string
 
   /**
-   * @deprecated Use [[fileName]] instead.
+   * Defines whether to inject bundled files or not.
+   * If set to `false` then bundled files are not injected.
+   *
+   * @default
+   * ```js
+   * true
+   * ```
    */
-  file?:       string
-
-  /**
-   * Defines where to inject bundled files. If `undefined` then links to CSS
-   * files are injected to the `<head>` and scripts are injected to the
-   * `<body>`. If set to `false` then bundled files are not injected.
-   */
-  inject?:     false | Inject
+  inject?:     boolean
 
   /**
    * Sets the title of the output HTML document.
@@ -124,49 +146,67 @@ interface IPluginOptions {
   meta?:       Record<string, string>
 
   /**
-   * An array of additional files that will be injected to the output HTML
-   * document. Only CSS and JS files are accepted. The optional
-   * [[type|IExternal.type]] property points which type of file is injected.
-   * If type is `undefined` then it is detected based on the file extension.
-   * The [[pos|IExternal.pos]] property points when the file is inserted:
-   * before processing the bundled files or after. The optional
-   * [[crossorigin|IExternal.crossorigin]] property points whether to place
-   * the CORS attribute to the generated tag.
+   * A set of options for injected records, where key is the name of the
+   * generated entry or chunk and value is a set of
+   * [link](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+   * or [script](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
+   * attributes.
+   *
+   * If not set then only the generated output of the input entries will be
+   * inserted without additional attributes.
+   *
+   * If [[tag|Entry.tag]] of an entry is not set then it will be determined
+   * based on other attributes and file extension.
    *
    * @example
    * ```js
-   * [{
-   *   file: 'https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css',
-   *   pos:  'before',
-   * }]
-   * ```
-   * */
-  externals?:  IExternal[]
-
-  /**
-   * An array or a set of names of dynamic chunks that will be injected to the
-   * output HTML document as preload links.
-   *
-   * @example
-   * ```js
-   * ['lib']
+   * {
+   *   index: {
+   *     type: 'module',
+   *   },
+   * }
    * ```
    */
-  preload?:    string[] | Set<string>
+  entries?:    Record<string, Entry>
 
   /**
-   * Inject entries as modules. This only works if the output format supports
-   * modules.
+   * Arrays of additional scripts and links that will be injected to the output
+   * HTML document before or after the generated entries and chunks.
    *
-   * ⚠️ Either [[modules]] or [[nomodule]] can be set at the same time.
+   * [[tag|External.tag]] is mandatory.
+   *
+   * @example
+   * ```js
+   * {
+   *   before: [{
+   *     tag:  'link',
+   *     href: 'https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css',
+   *     crossorigin: 'use-credentials',
+   *   }],
+   *   after: [{
+   *     tag:  'script',
+   *     text: 'console.log("Hello from external code!")',
+   *   }],
+   * }
+   * ```
+   * */
+  externals?:  {
+    before?: External[]
+    after?:  External[]
+  }
+
+  /**
+   * @deprecated Use [[entries]] instead.
+   */
+  preload?:    string[]
+
+  /**
+   * @deprecated Use [[entries]] instead.
    */
   modules?:    boolean
 
   /**
-   * Add the `nomodule` attribute to the injected entries. This only works if
-   * the output format does not support modules.
-   *
-   * ⚠️ Either [[modules]] or [[nomodule]] can be set at the same time.
+   * @deprecated Use [[entries]] instead.
    */
   nomodule?:   boolean
 
@@ -212,7 +252,7 @@ export type RollupPluginHTML2 = (options: IPluginOptions) => Plugin
  * The interface is use by the
  * [favicons plugin](https://github.com/mentaljam/rollup-plugin-favicons)
  * to pass generated tags to the HTML2 plugin.
-*/
+ */
 export interface IExtendedOptions extends OutputOptions {
   /** Output of the `rollup-plugin-favicons` */
   __favicons_output?: string[]

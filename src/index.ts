@@ -3,27 +3,25 @@ import {minify} from 'html-minifier'
 import {HTMLElement, parse, TextNode} from 'node-html-parser'
 import * as path from 'path'
 import {
-  ModuleFormat,
   OutputAsset,
   OutputChunk,
   PluginContext,
 } from 'rollup'
 
 import {
-  Crossorigin,
-  ExternalPosition,
   IExtendedOptions,
-  IExternal,
-  Inject,
-  InjectType,
   RollupPluginHTML2,
+  Entry,
+  External,
+  ITextScript,
 } from './types'
 
+const addNewLine = (node: HTMLElement): TextNode => node.appendChild(new TextNode('\n  '))
 
 const getChildElement = (
   node: HTMLElement,
-  tag: string,
-  append = true,
+  tag:  string,
+  append = true
 ): HTMLElement => {
   let child = node.querySelector(tag)
   if (!child) {
@@ -37,178 +35,112 @@ const getChildElement = (
   return child
 }
 
-const addNewLine = (node: HTMLElement): TextNode => node.appendChild(new TextNode('\n  '))
-
-const normalizePreload = (
-  preload?: string[] | Set<string>,
-): Set<string> => {
-  if (!preload) {
-    preload = []
+const appendNodeFactory = (
+  context: PluginContext,
+  head:    HTMLElement,
+  body:    HTMLElement,
+) => (
+  options:   Partial<Entry | External> = {},
+  filePath?: string,
+) => {
+  // Check if `as` is set
+  const asSet = 'as' in options
+  // Try to detect the tag if not set
+  if (!options.tag) {
+    if (asSet || 'rel' in options) {
+      // Seems to be a link
+      options.tag = 'link'
+    } else if (filePath) {
+      // Detect from the extension
+      options.tag = /.+\.m?js$/.test(filePath) ? 'script' : 'link'
+    }
   }
-  if (preload instanceof Array) {
-    preload = new Set(preload)
+  const isLink = options.tag === 'link'
+  if (isLink) {
+    if (!asSet && options.rel === 'preload') {
+      context.error('One or more entries or externals have the `rel` option \
+set to "preload" but no `as` option defined')
+    }
   }
-  return preload
+  if (filePath) {
+    if (isLink) {
+      options.href = filePath
+    } else {
+      options.src = filePath
+    }
+  } else if (!('src' in options || 'href' in options || 'text' in options)) {
+    context.error('One of `src`, `href`, or `text` property must be defined explicitly for `externals`')
+  }
+  if (isLink && !options.rel && typeof options.href === 'string' && path.extname(options.href) == '.css') {
+    options.rel = 'stylesheet'
+  }
+  const {tag, text, ...attrs} = (options as ITextScript)
+  const attrsstr = Object.entries(attrs).reduce((prev, [key, val]) => {
+    prev += key
+    if (val !== true) {
+      prev += '='
+      prev += JSON.stringify(val)
+    }
+    prev += ' '
+    return prev
+  }, '')
+  const parent = isLink ? head : body
+  addNewLine(parent)
+  const entry = new HTMLElement(tag, {}, attrsstr)
+  parent.appendChild(entry)
+  if (text) {
+    entry.appendChild(new TextNode(text))
+  }
 }
 
 const normalizePrefix = (
   prefix = '',
 ) => {
-  if (prefix && !prefix.endsWith('/')) {
+  if (!prefix.endsWith('/')) {
     prefix += '/'
   }
   return prefix
 }
 
-const extensionToType = (
-  ext: InjectType | string,
-): string | null => {
-  switch (ext) {
-    case 'css': return 'style'
-    case 'js' : return 'script'
-    default   : return null
-  }
-}
-
-interface IReducesBundle {
-  entries:        Record<string, string>
-  dynamicEntries: Record<string, string>
-}
-
-const isChunk = (item: OutputAsset | OutputChunk): item is OutputChunk => (
-  item.type === 'chunk'
-)
-
-const bundleReducer = (
-  prev: IReducesBundle,
-  cur: OutputAsset | OutputChunk,
-): IReducesBundle => {
-  if (isChunk(cur)) {
-    // Use full name with possible hash and without extension to process
-    // possible CSS files and other assets with same name of entry
-    const {name} = path.parse(cur.fileName)
-    if (cur.isEntry) {
-      prev.entries[name] = cur.name
-    } else if (cur.isDynamicEntry) {
-      prev.dynamicEntries[name] = cur.name
-    }
-  }
-  return prev
-}
-
-const formatSupportsModules = (
-  f?: ModuleFormat,
-): boolean => (
-     f === 'es'
-  || f === 'esm'
-  || f === 'module'
-)
-
-const checkBoolean = (
-  context: PluginContext,
-  name:    string,
-  value:   unknown,
-): void => {
-  const type = typeof value
-  if (type !== 'boolean' && type !== 'undefined') {
-    context.error(`Invalid \`${name}\` argument: ${JSON.stringify(value)}`)
-  }
-}
-
-const checkModulesOption = (
-  context: PluginContext,
-  name:    string,
-  format:  ModuleFormat | undefined,
-  value:   boolean | undefined,
-): void => {
-  if (value) {
-    context.error(`The \`${name}\` option is set to true but the output.format is ${format as string}, \
-consider to use another format or switch off the option`)
-  }
-}
-
-type InjectCSSAndJS = (
-  fileName:     string,
-  type:         InjectType | string,
-  pos?:         Inject,
-  crossorigin?: Crossorigin,
-) => void
-
-const injectCSSandJSFactory = (
-  head:     HTMLElement,
-  body:     HTMLElement,
-  modules:  boolean | undefined,
-  nomodule: boolean | undefined,
-): InjectCSSAndJS => {
-  const moduleattr =
-      modules  ? 'type="module" '
-    : nomodule ? 'nomodule '
-    : ''
-
-  return (
-    fileName,
-    type,
-    pos,
-    crossorigin,
-  ): void => {
-    const cors = crossorigin ? `crossorigin="${crossorigin}" ` : ''
-    if (type === 'css') {
-      const parent = pos === 'body' ? body : head
-      addNewLine(parent)
-      parent.appendChild(new HTMLElement('link', {}, `rel="stylesheet" ${cors}href="${fileName}"`))
-    } else {
-      const parent = pos === 'head' ? head : body
-      addNewLine(parent)
-      parent.appendChild(new HTMLElement('script', {}, `${moduleattr}${cors}src="${fileName}"`))
-    }
-  }
-}
-
-type ExtrenalsProcessor = (pos: ExternalPosition) => void
-
-const extrenalsProcessorFactory = (
-  injectCSSandJS: ReturnType<typeof injectCSSandJSFactory>,
-  externals?: IExternal[],
-): ExtrenalsProcessor => {
-  if (!externals) {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    return (): void => {}
-  }
-  return (processPos): void => {
-    for (const {pos, file, type, crossorigin} of externals) {
-      if (pos === processPos) {
-        injectCSSandJS(file, type || path.extname(file).slice(1), undefined, crossorigin)
-      }
-    }
-  }
-}
+const isChunk = (item: OutputAsset | OutputChunk): item is OutputChunk => item.type === 'chunk'
 
 const enum Cache {
   templateIsFile = 'templateIsFile',
 }
 
 const html2: RollupPluginHTML2 = ({
-  template,
-  file: deprecatedFileOption,
-  fileName: htmlFileName,
-  inject,
-  title,
-  favicon,
-  meta,
+  entries = {},
   externals,
-  preload,
-  modules,
-  nomodule,
+  favicon,
+  fileName: htmlFileName,
+  inject = true,
+  meta,
   minify: minifyOptions,
   onlinePath,
+  template,
+  title,
   ...options
 }) => ({
   name: 'html2',
 
   buildStart(): void {
-    if (deprecatedFileOption) {
-      this.error('The `file` option is deprecated, use the `fileName` instead.')
+    const deprecated = {
+      preload:  'entries',
+      modules:  'entries',
+      nomodule: 'entries',
     }
+    for (const o of Object.keys(options)) {
+      if (o in deprecated) {
+        this.error(`The \`${o}\` option is deprecated, use \`${deprecated[o as keyof typeof deprecated]}\` instead.`)
+      } else {
+        this.warn(`Ignoring unknown option \`${o}\``)
+      }
+    }
+
+    if (externals && Array.isArray(externals)) {
+      this.error('`externals` must be an object: `{before: [], after: []}`')
+    }
+
     const templateIsFile = fs.existsSync(template)
     if (templateIsFile && fs.lstatSync(template).isFile()) {
       this.addWatchFile(template)
@@ -218,31 +150,39 @@ const html2: RollupPluginHTML2 = ({
     this.cache.set(Cache.templateIsFile, templateIsFile)
 
     if (favicon && !(fs.existsSync(favicon) && fs.lstatSync(favicon).isFile())) {
-      this.error('The provided favicon file does\'t exist')
+      this.error("The provided favicon file does't exist")
     }
 
-    if (typeof inject === 'string' && !(inject === 'head' || inject === 'body')) {
-      this.error('Invalid inject argument: ' + (inject as string))
+    if (typeof inject === 'string') {
+      this.warn('Invalid `inject` must be `true`, `false` or `undefined`')
+      inject = true
     }
 
-    if (externals) {
-      for (const {pos, crossorigin} of externals) {
-        if (pos && pos !== 'after' && pos !== 'before') {
-          this.error('Invalid position for the extrenal: ' + (pos as string))
-        }
-        if (crossorigin && crossorigin !== 'anonymous' && crossorigin !== 'use-credentials') {
-          this.error('Invalid crossorigin argument for the extrenal: ' + (crossorigin as string))
-        }
+    const check = ({tag, ...others}: Entry | External) => {
+      if (tag && tag !== 'link' && tag !== 'script') {
+        this.error(`Invalid value for the \`tag\` option: \
+must be one of "link" or "script"; received ${JSON.stringify(tag)}`)
+      }
+      const nmt = typeof others.nomodule
+      if (nmt !== 'boolean' && nmt !== 'undefined') {
+        this.error(`Invalid value for the \`nomodule\` option: \
+must be one of \`boolean\`, \`undefined\`; received ${JSON.stringify(others.nomodule)}`)
       }
     }
-
-    checkBoolean(this, 'modules',  modules)
-    checkBoolean(this, 'nomodule', nomodule)
-
-    Object.keys(options).forEach(o => this.warn(`Ignoring unknown option "${o}"`))
+    Object.values(entries).forEach(check)
+    const {
+      before = [],
+      after  = [],
+    } = externals || {}
+    before.forEach(check)
+    after.forEach(check)
   },
 
-  outputOptions({dir, file: bundleFile, format}): null {
+  outputOptions({
+    dir,
+    file: bundleFile,
+    format,
+  }): null {
     if (!htmlFileName) {
       let distDir = process.cwd()
       if (dir) {
@@ -254,15 +194,34 @@ const html2: RollupPluginHTML2 = ({
       // Template is always a file path
       htmlFileName = path.resolve(distDir, path.basename(template))
       if (htmlFileName === path.resolve(template)) {
-        this.error('Could\'t write the generated HTML to the source template, define one of the options: `file`, `output.file` or `output.dir`')
+        this.error(
+          "Could't write the generated HTML to the source template, \
+define one of the options: `file`, `output.file` or `output.dir`"
+        )
       }
     }
-    if (modules && nomodule) {
-      this.error('Options `modules` and `nomodule` cannot be set at the same time')
+    const modulesSupport = !!format && /^(esm?|module)$/.test(format)
+    const checkModules = (e: Entry | External) => {
+      if (e.type == 'module') {
+        if (e.tag === 'script' && e.nomodule) {
+          this.error('One or more entries or externals have \
+the `nomodule` option enabled and `type` set to "module"')
+        }
+        if (!modulesSupport) {
+          this.error(`One or more entries or externals have \
+the \`type\` option set to "module" but the \`output.format\` \
+is ${JSON.stringify(format)}, consider to use another format \
+or change the \`type\``)
+        }
+      }
     }
-    const modulesSupport = formatSupportsModules(format)
-    checkModulesOption(this, 'modules',  format, modules  && !modulesSupport)
-    checkModulesOption(this, 'nomodule', format, nomodule && modulesSupport)
+    Object.values(entries).forEach(checkModules)
+    const {
+      before = [],
+      after  = [],
+    } = externals || {}
+    before.forEach(checkModules)
+    after.forEach(checkModules)
     return null
   },
 
@@ -272,17 +231,17 @@ const html2: RollupPluginHTML2 = ({
       : template
 
     const doc = parse(data, {
-      pre: true,
+      pre:    true,
       script: true,
-      style: true,
-    }) as HTMLElement & {valid: boolean}
+      style:  true,
+    })
     if (!doc.valid) {
       this.error('Error parsing template')
     }
 
     const html = doc.querySelector('html')
     if (!html) {
-      this.error('The input template doesn\'t contain the `html` tag')
+      this.error("The input template doesn't contain the `html` tag")
     }
 
     const head = getChildElement(html, 'head', false)
@@ -290,7 +249,7 @@ const html2: RollupPluginHTML2 = ({
 
     if (meta) {
       const nodes = head.querySelectorAll('meta')
-      Object.entries(meta).forEach(([name, content]) => {
+      for (const [name, content] of Object.entries(meta)) {
         const oldMeta = nodes.find(n => n.attributes.name === name)
         const newMeta = new HTMLElement('meta', {}, `name="${name}" content="${content}"`)
         if (oldMeta) {
@@ -299,14 +258,15 @@ const html2: RollupPluginHTML2 = ({
           addNewLine(head)
           head.appendChild(newMeta)
         }
-      })
+      }
     }
 
+    // Inject favicons from the [rollup-plugin-favicons](https://github.com/mentaljam/rollup-plugin-favicons)
     const {__favicons_output: favicons = []} = output as IExtendedOptions
-    favicons.forEach(f => {
+    for (const f of favicons) {
       head.appendChild(new TextNode(f))
       addNewLine(head)
-    })
+    }
 
     if (title) {
       let node = head.querySelector('title')
@@ -319,11 +279,11 @@ const html2: RollupPluginHTML2 = ({
     }
 
     if (favicon) {
-      const nodes = head.querySelectorAll('link')
-      const rel = 'shortcut icon'
-      const oldLink = nodes.find(n => n.attributes.rel === rel)
+      const nodes    = head.querySelectorAll('link')
+      const rel      = 'shortcut icon'
+      const oldLink  = nodes.find(n => n.attributes.rel === rel)
       const fileName = path.basename(favicon)
-      const newLink = new HTMLElement('link', {}, `rel="${rel}" href="${fileName}"`)
+      const newLink  = new HTMLElement('link', {}, `rel="${rel}" href="${fileName}"`)
       if (oldLink) {
         head.exchangeChild(oldLink, newLink)
       } else {
@@ -333,45 +293,41 @@ const html2: RollupPluginHTML2 = ({
       this.emitFile({
         fileName,
         source: fs.readFileSync(favicon),
-        type: 'asset',
+        type:   'asset',
       })
     }
 
-    const injectCSSandJS   = injectCSSandJSFactory(head, body, modules, nomodule)
-    const processExternals = extrenalsProcessorFactory(injectCSSandJS, externals)
+    const appendNode = appendNodeFactory(this, head, body)
+
+    const processExternal = (e: External) => {
+      if (!e.tag) {
+        this.error('`tag` property must be defined explicitly for `externals`')
+      }
+      appendNode(e)
+    }
+    const {
+      before = [],
+      after  = [],
+    } = externals || {}
 
     // Inject externals before
-    processExternals('before')
+    before.forEach(processExternal)
 
     // Inject generated files
-    if (inject !== false) {
-      const files = Object.values(bundle)
-      // First of all get entries
-      const {entries, dynamicEntries} = files.reduce(bundleReducer, {
-        dynamicEntries: {},
-        entries: {},
-      } as IReducesBundle)
-      // Now process all files and inject only entries and preload files
-      preload = normalizePreload(preload)
+    if (inject) {
       const prefix = normalizePrefix(onlinePath)
-      files.forEach(({fileName}) => {
-        const {name, ext} = path.parse(fileName)
-        const injectType  = ext.slice(1)
-        const filePath    = prefix + fileName
-        if (name in entries) {
-          injectCSSandJS(filePath, injectType, inject)
-        } else if (name in dynamicEntries && (preload as Set<string>).has(dynamicEntries[name])) {
-          const linkType = extensionToType(injectType)
-          if (linkType) {
-            addNewLine(head)
-            head.appendChild(new HTMLElement('link', {}, `rel="preload" href="${filePath}" as="${linkType}"`))
-          }
+      for (const file of Object.values(bundle)) {
+        const {name, fileName} = file
+        const filePath = prefix + fileName
+        const options  = name ? entries[name] : undefined
+        if (options || !isChunk(file) || file.isEntry) {
+          appendNode(options, filePath)
         }
-      })
+      }
     }
 
     // Inject externals after
-    processExternals('after')
+    after.forEach(processExternal)
 
     let source = '<!doctype html>\n' + doc.toString()
 
