@@ -14,5 +14,15 @@
   },
   "include": [
     "src/*.ts"
-  ]
+  ],
+  "typedocOptions": {
+    "entryPoints": [
+      "src/types.ts"
+    ],
+    "out": "docs",
+    "toc": [
+      "RollupPluginHTML2",
+      "IPluginOptions"
+    ]
+  }
 }
