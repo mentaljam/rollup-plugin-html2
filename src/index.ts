@@ -9,11 +9,11 @@ import {
 } from 'rollup'
 
 import {
-  IExtendedOptions,
-  RollupPluginHTML2,
   Entry,
   External,
+  IExtendedOptions,
   ITextScript,
+  RollupPluginHTML2,
 } from './types'
 
 const addNewLine = (node: HTMLElement): TextNode => node.appendChild(new TextNode('\n  '))
@@ -110,6 +110,7 @@ const enum Cache {
 
 const html2: RollupPluginHTML2 = ({
   entries = {},
+  exclude = new Set(),
   externals,
   favicon,
   fileName: htmlFileName,
@@ -156,6 +157,14 @@ const html2: RollupPluginHTML2 = ({
     if (typeof inject === 'string') {
       this.warn('Invalid `inject` must be `true`, `false` or `undefined`')
       inject = true
+    }
+
+    if (inject) {
+      for (const name of exclude) {
+        if (name in entries) {
+          this.warn(`Excluding a configured entry "${name}"`)
+        }
+      }
     }
 
     const check = ({tag, ...others}: Entry | External) => {
@@ -316,12 +325,17 @@ or change the \`type\``)
     // Inject generated files
     if (inject) {
       const prefix = normalizePrefix(onlinePath)
+      if (Array.isArray(exclude)) {
+        exclude = new Set(exclude)
+      }
       for (const file of Object.values(bundle)) {
         const {name, fileName} = file
-        const filePath = prefix + fileName
-        const options  = name ? entries[name] : undefined
-        if (options || !isChunk(file) || file.isEntry) {
-          appendNode(options, filePath)
+        if (!name || !exclude.has(name)) {
+          const filePath = prefix + fileName
+          const options  = name ? entries[name] : undefined
+          if (options || !isChunk(file) || file.isEntry) {
+            appendNode(options, filePath)
+          }
         }
       }
     }

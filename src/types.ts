@@ -170,6 +170,16 @@ export interface IPluginOptions {
   entries?:    Record<string, Entry>
 
   /**
+   * An array or set of names of entries to exclude from injection.
+   *
+   * @example
+   * ```js
+   * ['worker']
+   * ```
+   */
+  exclude?:    string[] | Set<string>
+
+  /**
    * Arrays of additional scripts and links that will be injected to the output
    * HTML document before or after the generated entries and chunks.
    *
