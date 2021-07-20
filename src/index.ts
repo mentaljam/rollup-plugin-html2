@@ -244,7 +244,9 @@ or change the \`type\``)
       ? fs.readFileSync(template).toString()
       : template
 
-    const doc = parse(data)
+    const doc = parse(data, {
+      comment: true,
+    })
     const html = doc.querySelector('html')
     if (!html) {
       this.error("The input template doesn't contain the `html` tag")
