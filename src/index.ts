@@ -323,9 +323,10 @@ or change the \`type\``)
     if (favicon) {
       const nodes    = head.querySelectorAll('link')
       const rel      = 'shortcut icon'
-      const oldLink  = nodes.find(n => n.attributes.rel === rel)
-      const fileName = prefix + path.basename(favicon)
-      const newLink  = new HTMLElement('link', {}, `rel="${rel}" href="${fileName}"`, head)
+      const oldLink = nodes.find(n => n.attributes.rel === rel)
+      const fileName = path.basename(favicon)
+      const filePath = prefix + fileName
+      const newLink  = new HTMLElement('link', {}, `rel="${rel}" href="${filePath}"`, head)
       if (oldLink) {
         head.exchangeChild(oldLink, newLink)
       } else {
