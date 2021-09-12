@@ -287,25 +287,6 @@ or change the \`type\``)
 
     const prefix = normalizePrefix(onlinePath)
 
-    if (favicon) {
-      const nodes    = head.querySelectorAll('link')
-      const rel      = 'shortcut icon'
-      const oldLink  = nodes.find(n => n.attributes.rel === rel)
-      const fileName = prefix + path.basename(favicon)
-      const newLink  = new HTMLElement('link', {}, `rel="${rel}" href="${fileName}"`, head)
-      if (oldLink) {
-        head.exchangeChild(oldLink, newLink)
-      } else {
-        addNewLine(head)
-        head.appendChild(newLink)
-      }
-      this.emitFile({
-        fileName,
-        source: fs.readFileSync(favicon),
-        type:   'asset',
-      })
-    }
-
     const appendNode = appendNodeFactory(this, head, body)
 
     const processExternal = (e: External) => {
@@ -337,6 +318,25 @@ or change the \`type\``)
           }
         }
       }
+    }
+
+    if (favicon) {
+      const nodes    = head.querySelectorAll('link')
+      const rel      = 'shortcut icon'
+      const oldLink  = nodes.find(n => n.attributes.rel === rel)
+      const fileName = prefix + path.basename(favicon)
+      const newLink  = new HTMLElement('link', {}, `rel="${rel}" href="${fileName}"`, head)
+      if (oldLink) {
+        head.exchangeChild(oldLink, newLink)
+      } else {
+        addNewLine(head)
+        head.appendChild(newLink)
+      }
+      this.emitFile({
+        fileName,
+        source: fs.readFileSync(favicon),
+        type:   'asset',
+      })
     }
 
     // Inject externals after
