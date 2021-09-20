@@ -7,6 +7,7 @@ const input          = 'src/index.js'
 const dir            = 'dist/nomodule'
 const entryFileNames = '[format]/[name]-[hash].js'
 const chunkFileNames = entryFileNames
+const onlinePath     = '/nomodule'
 
 const iifeOptions = {
   dir,
@@ -44,6 +45,8 @@ const esmBundle = await rollup({
     html2({
       template: 'src/index.html',
       title: 'Rollup HTML2 plugin example',
+      favicon: 'favicon.ico',
+      onlinePath,
       meta: {
         description:
           'A usage example for the rollup-plugin-html2 with injection \
@@ -63,7 +66,7 @@ of two scripts (module and nomodule).',
         }, {
           tag:         'script',
           nomodule:    true,
-          src:         '/' + iife,
+          src:         `${onlinePath}/${iife}`,
         }],
       },
     }),

@@ -16,6 +16,8 @@ export default {
     html2({
       template: 'src/index.html',
       title: 'Rollup HTML2 plugin example',
+      favicon: 'favicon.ico',
+      onlinePath: '/complex',
       meta: {
         description: 'A complex usage example for the rollup-plugin-html2',
       },
