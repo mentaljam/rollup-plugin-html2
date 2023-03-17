@@ -25,7 +25,7 @@ const getChildElement = (
 ): HTMLElement => {
   let child = node.querySelector(tag)
   if (!child) {
-    child = new HTMLElement(tag, {}, '', node)
+    child = new HTMLElement(tag, {}, '', node, [-1, -1])
     if (append) {
       node.appendChild(child)
     } else {
@@ -86,7 +86,7 @@ set to "preload" but no `as` option defined')
   }, '')
   const parent = tag === 'script' ? body : head
   addNewLine(parent)
-  const entry = new HTMLElement(tag, {}, attrsstr, parent)
+  const entry = new HTMLElement(tag, {}, attrsstr, parent, [-1, -1])
   parent.appendChild(entry)
   if (text) {
     entry.appendChild(new TextNode(text, entry))
@@ -259,7 +259,7 @@ or change the \`type\``)
       const nodes = head.querySelectorAll('meta')
       for (const [name, content] of Object.entries(meta)) {
         const oldMeta = nodes.find(n => n.attributes.name === name)
-        const newMeta = new HTMLElement('meta', {}, `name="${name}" content="${content}"`, head)
+        const newMeta = new HTMLElement('meta', {}, `name="${name}" content="${content}"`, head, [-1, -1])
         if (oldMeta) {
           head.exchangeChild(oldMeta, newMeta)
         } else {
@@ -280,7 +280,7 @@ or change the \`type\``)
       let node = head.querySelector('title')
       if (!node) {
         addNewLine(head)
-        node = new HTMLElement('title', {}, '', head)
+        node = new HTMLElement('title', {}, '', head, [-1, -1])
       }
       node.set_content(title)
     }
@@ -326,7 +326,7 @@ or change the \`type\``)
       const oldLink = nodes.find(n => n.attributes.rel === rel)
       const fileName = path.basename(favicon)
       const filePath = prefix + fileName
-      const newLink  = new HTMLElement('link', {}, `rel="${rel}" href="${filePath}"`, head)
+      const newLink  = new HTMLElement('link', {}, `rel="${rel}" href="${filePath}"`, head, [-1, -1])
       if (oldLink) {
         head.exchangeChild(oldLink, newLink)
       } else {

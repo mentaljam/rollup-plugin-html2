@@ -1,6 +1,6 @@
 {
   "name": "rollup-plugin-html2",
-  "version": "3.1.0",
+  "version": "4.0.0",
   "description": "Rollup plugin to zip up emitted files.",
   "homepage": "https://mentaljam.github.io/rollup-plugin-html2",
   "repository": {
@@ -10,9 +10,14 @@
   "bugs": {
     "url": "https://github.com/mentaljam/rollup-plugin-html2/issues"
   },
-  "main": "dist/index.cjs.js",
-  "module": "dist/index.es.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/cjs/index.cjs"
+    }
+  },
   "files": [
     "dist",
     "LICENSE",
@@ -20,7 +25,10 @@
   ],
   "scripts": {
     "prebuild": "pnpm run lint",
-    "build": "rollup -c",
+    "build": "npm run build:cjs && npm run build:esm && npm run build:types",
+    "build:cjs": "tsc -m commonjs --outDir dist/cjs",
+    "build:esm": "tsc -m es6",
+    "build:types": "tsc -d --emitDeclarationOnly",
     "docs": "npx typedoc src/types.ts && npx gh-pages -d docs",
     "lint": "eslint src/*.ts -f visualstudio",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -34,20 +42,18 @@
   "license": "MIT",
   "dependencies": {
     "html-minifier": "^4.0.0",
-    "node-html-parser": "^4.1.5"
+    "node-html-parser": "^6.1.5"
   },
   "devDependencies": {
-    "@rollup/plugin-typescript": "^8.2.5",
-    "@types/html-minifier": "^4.0.1",
-    "@types/node": "^16.9.4",
-    "@typescript-eslint/eslint-plugin": "^4.31.1",
-    "@typescript-eslint/parser": "^4.31.1",
-    "eslint": "^7.32.0",
-    "rollup": "^2.56.3",
-    "typescript": "^4.4.3"
+    "@types/html-minifier": "^4.0.2",
+    "@types/node": "^18.15.3",
+    "@typescript-eslint/eslint-plugin": "^5.55.0",
+    "@typescript-eslint/parser": "^5.55.0",
+    "eslint": "^8.36.0",
+    "typescript": "^5.0.2"
   },
   "peerDependencies": {
-    "@types/html-minifier": "^4.0.1",
-    "rollup": ">=2.0.2"
+    "@types/html-minifier": "^4.0",
+    "rollup": ">=3.0"
   }
 }
