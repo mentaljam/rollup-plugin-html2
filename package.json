@@ -50,6 +50,7 @@
     "@typescript-eslint/eslint-plugin": "^5.55.0",
     "@typescript-eslint/parser": "^5.55.0",
     "eslint": "^8.36.0",
+    "rollup": "^3.19.1",
     "typescript": "^5.0.2"
   },
   "peerDependencies": {

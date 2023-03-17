@@ -11,6 +11,7 @@ importers:
       eslint: ^8.36.0
       html-minifier: ^4.0.0
       node-html-parser: ^6.1.5
+      rollup: ^3.19.1
       typescript: ^5.0.2
     dependencies:
       html-minifier: 4.0.0
@@ -21,6 +22,7 @@ importers:
       '@typescript-eslint/eslint-plugin': 5.55.0_qsnvknysi52qtaxqdyqyohkcku
       '@typescript-eslint/parser': 5.55.0_j4766f7ecgqbon3u7zlxn5zszu
       eslint: 8.36.0
+      rollup: 3.19.1
       typescript: 5.0.2
 
   examples:
