@@ -26,7 +26,7 @@
   "scripts": {
     "prebuild": "pnpm run lint",
     "build": "npm run build:cjs && npm run build:esm && npm run build:types",
-    "build:cjs": "tsc -m commonjs --outDir dist/cjs",
+    "build:cjs": "tsc -m commonjs --outDir dist/cjs && node scripts/rename-cjs-output.mjs",
     "build:esm": "tsc -m es6",
     "build:types": "tsc -d --emitDeclarationOnly",
     "docs": "npx typedoc src/types.ts && npx gh-pages -d docs",
