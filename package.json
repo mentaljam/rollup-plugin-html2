@@ -1,7 +1,7 @@
 {
   "name": "rollup-plugin-html2",
   "version": "4.0.0",
-  "description": "Rollup plugin to zip up emitted files.",
+  "description": "Rollup plugin to inject bundled files to an HTML templates.",
   "homepage": "https://mentaljam.github.io/rollup-plugin-html2",
   "repository": {
     "type": "git",
@@ -13,24 +13,22 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/cjs/index.js"
+      "types": "./dist/index.d.ts"
     }
   },
   "files": [
     "dist",
+    "src",
     "LICENSE",
     "README.md"
   ],
   "scripts": {
     "prebuild": "pnpm run lint",
-    "build": "npm run build:cjs && npm run build:esm && npm run build:types",
-    "build:cjs": "tsc -m commonjs --outDir dist/cjs",
-    "build:esm": "tsc -m es6",
-    "build:types": "tsc -d --emitDeclarationOnly",
-    "docs": "npx typedoc src/types.ts && npx gh-pages -d docs",
-    "lint": "eslint src/*.ts -f visualstudio",
+    "build": "tsc",
+    "docs": "pnpm dlx typedoc@0.28.19",
+    "typecheck": "--noEmit",
+    "lint": "eslint",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -41,20 +39,19 @@
   "author": "Petr Tsymbarovich <petr@tsymbarovich.ru>",
   "license": "MIT",
   "dependencies": {
-    "html-minifier": "^4.0.0",
-    "node-html-parser": "^6.1.5"
+    "html-minifier-next": "^7.0.0",
+    "node-html-parser": "^7.1.0"
   },
   "devDependencies": {
-    "@types/html-minifier": "^4.0.2",
-    "@types/node": "^18.15.3",
-    "@typescript-eslint/eslint-plugin": "^5.55.0",
-    "@typescript-eslint/parser": "^5.55.0",
-    "eslint": "^8.36.0",
-    "rollup": "^3.19.1",
-    "typescript": "^5.0.2"
+    "@eslint/js": "10.0.1",
+    "@types/node": "25.9.3",
+    "eslint": "10.5.0",
+    "rollup": "4.62.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.61.1"
   },
   "peerDependencies": {
-    "@types/html-minifier": "^4.0",
+    "html-minifier-next": ">=7.0",
     "rollup": ">=3.0"
   },
   "packageManager": "pnpm@11.7.0+sha512.19cc852c120c7125760f2443ee6be0ca5b40f9f50598de1a09a1f177503e010e57c23c77646e01e761de59bf874fb22a3398c33ab9691fc13eb946b6f0f4d620"

@@ -1,27 +1,22 @@
 {
   "compilerOptions": {
-    "target": "esnext",
-    "moduleResolution": "node",
-    "sourceMap": false,
+    "target": "ES2024",
+    "module": "Node16",
+    "sourceMap": true,
     "declaration": true,
+    "declarationMap": true,
     "strict": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "isolatedDeclarations": true,
+    "types": ["node"],
+    "incremental": true,
+    "tsBuildInfoFile": "node_modules/.tmp/tsbuildinfo.json"
   },
   "include": [
     "src/*.ts"
-  ],
-  "typedocOptions": {
-    "entryPoints": [
-      "src/types.ts"
-    ],
-    "out": "docs",
-    "toc": [
-      "RollupPluginHTML2",
-      "IPluginOptions"
-    ]
-  }
+  ]
 }
