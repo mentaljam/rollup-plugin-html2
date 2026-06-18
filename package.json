@@ -1,6 +1,6 @@
 {
   "name": "rollup-plugin-html2",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "description": "Rollup plugin to inject bundled files to an HTML templates.",
   "homepage": "https://mentaljam.github.io/rollup-plugin-html2",
   "repository": {
