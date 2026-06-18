@@ -1,0 +1,36 @@
+name: Deploy Documentation to GitHub Pages
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/configure-pages@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run docs
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: './docs'
+      - id: deployment
+        uses: actions/deploy-pages@v5
