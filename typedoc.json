@@ -1,5 +1,11 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": ["src/index.ts"],
-  "out": "docs"
+  "out": "docs",
+  "categoryOrder": ["Main API", "*"],
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": false
+  },
+  "sort": ["alphabetical"]
 }

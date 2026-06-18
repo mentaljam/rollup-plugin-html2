@@ -81,7 +81,11 @@ export interface Style extends Injected {
 /** External (not generated) and injected resource */
 export type External = SrcScript | TextScript | ExternalLink | Style;
 
-/** HTML2 Plugin Options */
+/**
+ * HTML2 Plugin Options
+ *
+ * @category Main API
+ */
 export interface RollupHTML2PluginOptions {
   /**
    * A path to an HTML template file or an HTML string.
@@ -252,7 +256,11 @@ export interface RollupHTML2PluginOptions {
   onlinePath?: string;
 }
 
-/** Factory for the HTML2 plugin */
+/**
+ * Factory for the HTML2 plugin
+ *
+ * @category Main API
+ */
 export type RollupHTML2Plugin = (options: RollupHTML2PluginOptions) => Plugin;
 
 let templateIsFile = false;
