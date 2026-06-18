@@ -1,5 +1,10 @@
 # rollup-plugin-html2
 
+[![npm version](https://img.shields.io/npm/v/rollup-plugin-html2.svg)](https://www.npmjs.com/package/rollup-plugin-html2)
+[![npm downloads](https://img.shields.io/npm/dm/rollup-plugin-html2.svg)](https://www.npmjs.com/package/rollup-plugin-html2)
+[![license](https://img.shields.io/npm/l/rollup-plugin-html2.svg)](LICENSE)
+[![documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://mentaljam.github.io/rollup-plugin-html2/)
+
 [Rollup](https://github.com/rollup/rollup) plugin to inject bundled files to an HTML template.
 
 This plugin was inspired by the
@@ -43,7 +48,7 @@ export default {
 
 ## Options
 
-Read the [documentation](https://mentaljam.github.io/rollup-plugin-html2/interfaces/ipluginoptions.html).
+Read the [documentation](https://mentaljam.github.io/rollup-plugin-html2/interfaces/RollupHTML2PluginOptions.html).
 
 ## License
 
