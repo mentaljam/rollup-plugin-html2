@@ -3,7 +3,7 @@ import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 export default defineConfig({
-  files: ["src/*.ts"],
+  files: ["src/*.ts", "tests/**/*.ts"],
   extends: [js.configs.recommended, tseslint.configs.recommended],
   "rules": {
     "linebreak-style": ["error", "unix"],

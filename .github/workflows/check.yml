@@ -1,0 +1,22 @@
+name: Check Pull Request
+
+on:
+  pull_request:
+
+jobs:
+  check:
+    name: Typecheck and lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - run: pnpm tsc -b --noEmit
+      - run: pnpm run lint
