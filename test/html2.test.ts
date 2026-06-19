@@ -234,6 +234,60 @@ test("can disable generated file injection", async () => {
   assert.doesNotMatch(html, /<link/);
 });
 
+test("can inject script tags into the head", async () => {
+  const output = await rollupWithHtml2({
+    entries: {
+      main: { tag: "script" },
+    },
+    externals: {
+      before: [{ tag: "script", src: "https://cdn.example/library.js" }],
+    },
+    fileName: "index.html",
+    inject: "head",
+    template: "<html><head></head><body></body></html>",
+  });
+
+  const mainChunk = getChunk(output, "main");
+  const html = String(getAsset(output, "index.html").source);
+  const document = parse(html);
+
+  assert.ok(
+    document.querySelector('head script[src="https://cdn.example/library.js"]'),
+  );
+  assert.ok(
+    document.querySelector(`head script[src="/${mainChunk.fileName}"]`),
+  );
+  assert.equal(document.querySelectorAll("body script").length, 0);
+});
+
+test("injects bundled CSS assets as stylesheet links", async () => {
+  const output = await generate({
+    html2Options: {
+      fileName: "index.html",
+      template: "<html><head></head><body></body></html>",
+    },
+    plugins: [
+      {
+        name: "test-css-asset",
+        generateBundle() {
+          this.emitFile({
+            fileName: "bundle.css",
+            source: "body { color: black; }",
+            type: "asset",
+          });
+        },
+      },
+    ],
+  });
+
+  const html = String(getAsset(output, "index.html").source);
+  const document = parse(html);
+
+  assert.ok(
+    document.querySelector('head link[rel="stylesheet"][href="/bundle.css"]'),
+  );
+});
+
 test("replaces existing meta and favicon links and emits the favicon asset", async () => {
   const output = await rollupWithHtml2({
     favicon: path.join(fixturesDir, "favicon.ico"),
@@ -322,7 +376,7 @@ test("warns about unknown options, string inject values, and excluded configured
 
   assert.deepEqual(warnings, [
     "[plugin html2] Ignoring unknown option `unknown`",
-    "[plugin html2] Invalid `inject` must be `true`, `false` or `undefined`",
+    '[plugin html2] Invalid `inject` must be `true | false | "head" | "body" | undefined`',
     '[plugin html2] Excluding a configured entry "main"',
   ]);
 });
