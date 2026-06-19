@@ -25,11 +25,12 @@
   ],
   "scripts": {
     "prebuild": "pnpm run lint",
-    "build": "tsc",
+    "build": "tsc -p tsconfig.lib.json",
     "docs": "pnpm dlx typedoc@0.28.19",
-    "typecheck": "--noEmit",
+    "typecheck": "tsc -p tsconfig.lib.json --noEmit",
     "lint": "eslint",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "pretest": "tsc -p tsconfig.lib.json",
+    "test": "node --experimental-test-coverage --test test/**/*.test.ts"
   },
   "keywords": [
     "rollup",

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://www.schemastore.org/tsconfig.json",
+  "extends": "./tsconfig.lib.json",
+  "compilerOptions": {
+    "declaration": false,
+    "declarationMap": false,
+    "isolatedDeclarations": false,
+    "noEmit": true,
+    "rootDir": ".",
+    "allowImportingTsExtensions": true,
+    "tsBuildInfoFile": "node_modules/.tmp/tsbuildinfo.test.json"
+  },
+  "include": [
+    "test/**/*.ts"
+  ]
+}

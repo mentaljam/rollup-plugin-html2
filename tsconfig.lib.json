@@ -1,0 +1,23 @@
+{
+  "$schema": "https://www.schemastore.org/tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2024",
+    "module": "Node16",
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "strict": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "isolatedDeclarations": true,
+    "types": ["node"],
+    "incremental": true,
+    "tsBuildInfoFile": "node_modules/.tmp/tsbuildinfo.lib.json"
+  },
+  "include": [
+    "src/*.ts"
+  ]
+}
