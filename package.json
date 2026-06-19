@@ -5,7 +5,7 @@
   "homepage": "https://mentaljam.github.io/rollup-plugin-html2",
   "repository": {
     "type": "git",
-    "url": "git+ssh://github.com/mentaljam/rollup-plugin-html2"
+    "url": "git+https://github.com/mentaljam/rollup-plugin-html2.git"
   },
   "bugs": {
     "url": "https://github.com/mentaljam/rollup-plugin-html2/issues"
