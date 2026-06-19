@@ -34,7 +34,7 @@ type NodeAppender = (
 export function appendNodeFactory(
   context: PluginContext,
   head: HTMLElement,
-  body: HTMLElement,
+  scriptParent: HTMLElement,
 ): NodeAppender {
   return (options = {}, filePath) => {
     // Check if `as` is set
@@ -87,7 +87,7 @@ set to "preload" but no `as` option defined',
       prev += " ";
       return prev;
     }, "");
-    const parent = tag === "script" ? body : head;
+    const parent = tag === "script" ? scriptParent : head;
     addNewLine(parent);
     const entry = new HTMLElement(tag, {}, attrsstr, parent, [-1, -1]);
     parent.appendChild(entry);

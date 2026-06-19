@@ -122,13 +122,15 @@ export interface RollupHTML2PluginOptions {
   /**
    * Defines whether to inject bundled files or not.
    * If set to `false` then bundled files are not injected.
+   * If set to `"head"` or `"body"` then script tags are injected to
+   * the selected element.
    *
    * @default
    * ```js
    * true
    * ```
    */
-  inject?: boolean;
+  inject?: boolean | "head" | "body";
 
   /**
    * Sets the title of the output HTML document.
@@ -314,8 +316,10 @@ const html2: RollupHTML2Plugin = ({
       this.error("The provided favicon file does't exist");
     }
 
-    if (typeof inject === "string") {
-      this.warn("Invalid `inject` must be `true`, `false` or `undefined`");
+    if (typeof inject === "string" && inject !== "head" && inject !== "body") {
+      this.warn(
+        'Invalid `inject` must be `true | false | "head" | "body" | undefined`',
+      );
       inject = true;
     }
 
@@ -446,7 +450,11 @@ or change the \`type\``);
 
     const prefix = normalizePrefix(onlinePath);
 
-    const appendNode = appendNodeFactory(this, head, body);
+    const appendNode = appendNodeFactory(
+      this,
+      head,
+      inject === "head" ? head : body,
+    );
 
     const processExternal = (e: External) => {
       if (!e.tag) {
