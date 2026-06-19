@@ -364,9 +364,9 @@ must be one of \`boolean\`, \`undefined\`; received ${JSON.stringify(others.nomo
           ? bundleDir
           : path.resolve(distDir, bundleDir);
       }
-      // Template is always a file path
-      htmlFileName = path.resolve(distDir, path.basename(template));
-      if (htmlFileName === path.resolve(template)) {
+
+      htmlFileName = path.basename(template);
+      if (path.resolve(distDir, htmlFileName) === path.resolve(template)) {
         this.error(
           "Could't write the generated HTML to the source template, \
 define one of the options: `file`, `output.file` or `output.dir`",
@@ -521,7 +521,7 @@ or change the \`type\``);
 
     // `file` has been checked in the `outputOptions` hook
     this.emitFile({
-      fileName: path.basename(htmlFileName as string),
+      fileName: htmlFileName,
       source,
       type: "asset",
     });

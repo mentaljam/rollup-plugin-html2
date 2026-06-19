@@ -221,6 +221,28 @@ test("reads an HTML template file and derives the emitted file name", async () =
   assert.ok(document.querySelector('script[src="/main.js"]'));
 });
 
+test("emits configured HTML file names in subdirectories", async () => {
+  const output = await rollupWithHtml2({
+    fileName: "nested/index.html",
+    template: "<html><head></head><body></body></html>",
+  });
+
+  const html = String(getAsset(output, "nested/index.html").source);
+  const document = parse(html);
+
+  assert.ok(document.querySelector('script[src="/main.js"]'));
+});
+
+test("rejects HTML file names outside the output directory", async () => {
+  await assertBuildRejects(
+    {
+      fileName: "../index.html",
+      template: "<html><head></head><body></body></html>",
+    },
+    /neither absolute nor relative paths/,
+  );
+});
+
 test("can disable generated file injection", async () => {
   const output = await rollupWithHtml2({
     fileName: "index.html",
