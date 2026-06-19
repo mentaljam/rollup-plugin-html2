@@ -284,19 +284,8 @@ const html2: RollupHTML2Plugin = ({
   name: "html2",
 
   async buildStart(): Promise<void> {
-    const deprecated = {
-      preload: "entries",
-      modules: "entries",
-      nomodule: "entries",
-    };
     for (const o of Object.keys(options)) {
-      if (o in deprecated) {
-        this.error(
-          `The \`${o}\` option is deprecated, use \`${deprecated[o as keyof typeof deprecated]}\` instead.`,
-        );
-      } else {
-        this.warn(`Ignoring unknown option \`${o}\``);
-      }
+      this.warn(`Ignoring unknown option \`${o}\``);
     }
 
     if (externals && Array.isArray(externals)) {

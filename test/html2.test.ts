@@ -406,15 +406,6 @@ test("warns about unknown options, string inject values, and excluded configured
 test("validates unsupported option shapes during buildStart", async () => {
   await assertBuildRejects(
     {
-      fileName: "index.html",
-      preload: true,
-      template: "<html><head></head><body></body></html>",
-    } as unknown as Parameters<typeof html2>[0],
-    /The `preload` option is deprecated/,
-  );
-
-  await assertBuildRejects(
-    {
       externals: [],
       fileName: "index.html",
       template: "<html><head></head><body></body></html>",
