@@ -315,7 +315,7 @@ test("replaces existing meta and favicon links and emits the favicon asset", asy
     favicon: path.join(fixturesDir, "favicon.ico"),
     fileName: "index.html",
     meta: {
-      description: "New description",
+      description: 'New description" onmouseover="alert(1)',
     },
     onlinePath: "assets/",
     template:
@@ -327,7 +327,13 @@ test("replaces existing meta and favicon links and emits the favicon asset", asy
 
   assert.equal(
     document.querySelector('meta[name="description"]')?.getAttribute("content"),
-    "New description",
+    'New description" onmouseover="alert(1)',
+  );
+  assert.equal(
+    document.querySelector('meta[name="description"]')?.getAttribute(
+      "onmouseover",
+    ),
+    undefined,
   );
   assert.equal(
     document.querySelector('link[rel="shortcut icon"]')?.getAttribute("href"),

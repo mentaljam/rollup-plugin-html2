@@ -409,13 +409,8 @@ or change the \`type\``);
         const nodes = head.querySelectorAll("meta");
         for (const [name, content] of Object.entries(meta)) {
           const oldMeta = nodes.find((n) => n.attributes.name === name);
-          const newMeta = new HTMLElement(
-            "meta",
-            {},
-            `name="${name}" content="${content}"`,
-            head,
-            [-1, -1],
-          );
+          const newMeta = new HTMLElement("meta", {}, "", head, [-1, -1]);
+          newMeta.setAttributes({ name, content });
           if (oldMeta) {
             head.exchangeChild(oldMeta, newMeta);
           } else {
@@ -486,13 +481,8 @@ or change the \`type\``);
         const oldLink = nodes.find((n) => n.attributes.rel === rel);
         const fileName = path.basename(favicon);
         const filePath = prefix + fileName;
-        const newLink = new HTMLElement(
-          "link",
-          {},
-          `rel="${rel}" href="${filePath}"`,
-          head,
-          [-1, -1],
-        );
+        const newLink = new HTMLElement("link", {}, "", head, [-1, -1]);
+        newLink.setAttributes({ rel, href: filePath });
         if (oldLink) {
           head.exchangeChild(oldLink, newLink);
         } else {

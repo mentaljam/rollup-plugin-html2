@@ -78,18 +78,12 @@ set to "preload" but no `as` option defined',
       options.rel = "stylesheet";
     }
     const { tag, text, ...attrs } = options as TextScript;
-    const attrsstr = Object.entries(attrs).reduce((prev, [key, val]) => {
-      prev += key;
-      if (val !== true) {
-        prev += "=";
-        prev += JSON.stringify(val);
-      }
-      prev += " ";
-      return prev;
-    }, "");
     const parent = tag === "script" ? scriptParent : head;
     addNewLine(parent);
-    const entry = new HTMLElement(tag, {}, attrsstr, parent, [-1, -1]);
+    const entry = new HTMLElement(tag, {}, "", parent, [-1, -1]);
+    for (const [key, val] of Object.entries(attrs)) {
+      entry.setAttribute(key, val === true ? "" : String(val));
+    }
     parent.appendChild(entry);
     if (text) {
       entry.appendChild(new TextNode(text, entry));

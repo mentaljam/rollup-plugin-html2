@@ -54,6 +54,7 @@ test("appendNodeFactory detects tags and writes expected attributes", () => {
   appendNode({ as: "script", rel: "preload" }, "preload.js");
   appendNode({}, "styles.css");
   appendNode({ async: true, tag: "script" }, "app.js");
+  appendNode({ src: 'app" onload="alert(1).js', tag: "script" });
   appendNode({ tag: "style", text: "body { margin: 0; }" });
 
   assert.ok(
@@ -61,6 +62,11 @@ test("appendNodeFactory detects tags and writes expected attributes", () => {
   );
   assert.ok(head.querySelector('link[rel="stylesheet"][href="styles.css"]'));
   assert.ok(body.querySelector('script[async][src="app.js"]'));
+  assert.equal(
+    body.querySelectorAll("script")[1]?.getAttribute("src"),
+    'app" onload="alert(1).js',
+  );
+  assert.equal(body.querySelectorAll("script")[1]?.getAttribute("onload"), undefined);
   assert.equal(head.querySelector("style")?.textContent, "body { margin: 0; }");
 });
 
