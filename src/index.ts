@@ -265,8 +265,6 @@ export interface RollupHTML2PluginOptions {
  */
 export type RollupHTML2Plugin = (options: RollupHTML2PluginOptions) => Plugin;
 
-let templateIsFile = false;
-
 const html2: RollupHTML2Plugin = ({
   entries = {},
   exclude = new Set(),
@@ -280,242 +278,252 @@ const html2: RollupHTML2Plugin = ({
   template,
   title,
   ...options
-}) => ({
-  name: "html2",
+}) => {
+  let templateIsFile = false;
 
-  async buildStart(): Promise<void> {
-    for (const o of Object.keys(options)) {
-      this.warn(`Ignoring unknown option \`${o}\``);
-    }
+  return {
+    name: "html2",
 
-    if (externals && Array.isArray(externals)) {
-      this.error("`externals` must be an object: `{before: [], after: []}`");
-    }
-
-    templateIsFile = await isFile(template);
-    if (templateIsFile) {
-      this.addWatchFile(template);
-    } else if (!htmlFileName) {
-      this.error(
-        "When `template` is an HTML string the `fileName` option must be defined",
-      );
-    }
-
-    if (favicon && !(await isFile(favicon))) {
-      this.error("The provided favicon file does't exist");
-    }
-
-    if (typeof inject === "string" && inject !== "head" && inject !== "body") {
-      this.warn(
-        'Invalid `inject` must be `true | false | "head" | "body" | undefined`',
-      );
-      inject = true;
-    }
-
-    if (inject) {
-      for (const name of exclude) {
-        if (name in entries) {
-          this.warn(`Excluding a configured entry "${name}"`);
-        }
-      }
-    }
-
-    const check = ({ tag, ...others }: Entry | External) => {
-      if (tag && tag !== "link" && tag !== "script" && tag !== "style") {
-        this.error(`Invalid value for the \`tag\` option: \
-must be one of "link", "script" or "style"; received ${JSON.stringify(tag)}`);
-      }
-      const nmt = typeof others.nomodule;
-      if (nmt !== "boolean" && nmt !== "undefined") {
-        this.error(`Invalid value for the \`nomodule\` option: \
-must be one of \`boolean\`, \`undefined\`; received ${JSON.stringify(others.nomodule)}`);
-      }
-    };
-    for (const e of Object.values(entries)) {
-      check(e);
-      if ((e.tag as unknown) === "style") {
-        this.error('An entry cannot have a `tag` property set to "style"');
-      }
-    }
-    const { before = [], after = [] } = externals || {};
-    before.forEach(check);
-    after.forEach(check);
-  },
-
-  outputOptions({ dir, file: bundleFile, format }): null {
-    if (!htmlFileName) {
-      let distDir = process.cwd();
-      if (dir) {
-        distDir = path.resolve(distDir, dir);
-      } else if (bundleFile) {
-        const bundleDir = path.dirname(bundleFile);
-        distDir = path.isAbsolute(bundleDir)
-          ? bundleDir
-          : path.resolve(distDir, bundleDir);
+    async buildStart(): Promise<void> {
+      for (const o of Object.keys(options)) {
+        this.warn(`Ignoring unknown option \`${o}\``);
       }
 
-      htmlFileName = path.basename(template);
-      if (path.resolve(distDir, htmlFileName) === path.resolve(template)) {
+      if (externals && Array.isArray(externals)) {
+        this.error("`externals` must be an object: `{before: [], after: []}`");
+      }
+
+      templateIsFile = await isFile(template);
+      if (templateIsFile) {
+        this.addWatchFile(template);
+      } else if (!htmlFileName) {
         this.error(
-          "Could't write the generated HTML to the source template, \
-define one of the options: `file`, `output.file` or `output.dir`",
+          "When `template` is an HTML string the `fileName` option must be defined",
         );
       }
-    }
-    const modulesSupport = !!format && /^(esm?|module)$/.test(format);
-    const checkModules = (e: Entry | External) => {
-      if (e.type == "module") {
-        if (e.tag === "script" && e.nomodule) {
-          this.error(
-            'One or more entries or externals have \
-the `nomodule` option enabled and `type` set to "module"',
-          );
-        }
-        if (!modulesSupport) {
-          this.error(`One or more entries or externals have \
-the \`type\` option set to "module" but the \`output.format\` \
-is ${JSON.stringify(format)}, consider to use another format \
-or change the \`type\``);
-        }
+
+      if (favicon && !(await isFile(favicon))) {
+        this.error("The provided favicon file does't exist");
       }
-    };
-    Object.values(entries).forEach(checkModules);
-    const { before = [], after = [] } = externals || {};
-    before.forEach(checkModules);
-    after.forEach(checkModules);
-    return null;
-  },
 
-  async generateBundle(output, bundle): Promise<void> {
-    const data = templateIsFile
-      ? await fs.readFile(template, { encoding: "utf-8" })
-      : template;
-
-    const doc = parse(data, { comment: true });
-    const html = doc.querySelector("html");
-    if (!html) {
-      this.error("The input template does not contain the `html` tag");
-    }
-
-    const head = getChildElement(html, "head", false);
-    const body = getChildElement(html, "body");
-
-    if (meta) {
-      const nodes = head.querySelectorAll("meta");
-      for (const [name, content] of Object.entries(meta)) {
-        const oldMeta = nodes.find((n) => n.attributes.name === name);
-        const newMeta = new HTMLElement(
-          "meta",
-          {},
-          `name="${name}" content="${content}"`,
-          head,
-          [-1, -1],
+      if (
+        typeof inject === "string" &&
+        inject !== "head" &&
+        inject !== "body"
+      ) {
+        this.warn(
+          'Invalid `inject` must be `true | false | "head" | "body" | undefined`',
         );
-        if (oldMeta) {
-          head.exchangeChild(oldMeta, newMeta);
-        } else {
-          addNewLine(head);
-          head.appendChild(newMeta);
-        }
+        inject = true;
       }
-    }
 
-    // Inject favicons from the [rollup-plugin-favicons](https://github.com/mentaljam/rollup-plugin-favicons)
-    const { __favicons_output: favicons = [] } = output as ExtendedOptions;
-    for (const f of favicons) {
-      head.appendChild(new TextNode(f, head));
-      addNewLine(head);
-    }
-
-    if (title) {
-      let node = head.querySelector("title");
-      if (!node) {
-        addNewLine(head);
-        node = new HTMLElement("title", {}, "", head, [-1, -1]);
-        head.appendChild(node);
-      }
-      node.set_content(title);
-    }
-
-    const prefix = normalizePrefix(onlinePath);
-
-    const appendNode = appendNodeFactory(
-      this,
-      head,
-      inject === "head" ? head : body,
-    );
-
-    const processExternal = (e: External) => {
-      if (!e.tag) {
-        this.error("`tag` property must be defined explicitly for `externals`");
-      }
-      appendNode(e);
-    };
-    const { before = [], after = [] } = externals || {};
-
-    // Inject externals before
-    before.forEach(processExternal);
-
-    // Inject generated files
-    if (inject) {
-      if (Array.isArray(exclude)) {
-        exclude = new Set(exclude);
-      }
-      for (const file of Object.values(bundle)) {
-        const { name, fileName } = file;
-        if (!name || !exclude.has(name)) {
-          const filePath = prefix + fileName;
-          const options = name ? entries[name] : undefined;
-          if (options || !isChunk(file) || file.isEntry) {
-            appendNode(options, filePath);
+      if (inject) {
+        for (const name of exclude) {
+          if (name in entries) {
+            this.warn(`Excluding a configured entry "${name}"`);
           }
         }
       }
-    }
 
-    if (favicon) {
-      const nodes = head.querySelectorAll("link");
-      const rel = "shortcut icon";
-      const oldLink = nodes.find((n) => n.attributes.rel === rel);
-      const fileName = path.basename(favicon);
-      const filePath = prefix + fileName;
-      const newLink = new HTMLElement(
-        "link",
-        {},
-        `rel="${rel}" href="${filePath}"`,
-        head,
-        [-1, -1],
-      );
-      if (oldLink) {
-        head.exchangeChild(oldLink, newLink);
-      } else {
-        addNewLine(head);
-        head.appendChild(newLink);
+      const check = ({ tag, ...others }: Entry | External) => {
+        if (tag && tag !== "link" && tag !== "script" && tag !== "style") {
+          this.error(`Invalid value for the \`tag\` option: \
+must be one of "link", "script" or "style"; received ${JSON.stringify(tag)}`);
+        }
+        const nmt = typeof others.nomodule;
+        if (nmt !== "boolean" && nmt !== "undefined") {
+          this.error(`Invalid value for the \`nomodule\` option: \
+must be one of \`boolean\`, \`undefined\`; received ${JSON.stringify(others.nomodule)}`);
+        }
+      };
+      for (const e of Object.values(entries)) {
+        check(e);
+        if ((e.tag as unknown) === "style") {
+          this.error('An entry cannot have a `tag` property set to "style"');
+        }
       }
+      const { before = [], after = [] } = externals || {};
+      before.forEach(check);
+      after.forEach(check);
+    },
+
+    outputOptions({ dir, file: bundleFile, format }): null {
+      if (!htmlFileName) {
+        let distDir = process.cwd();
+        if (dir) {
+          distDir = path.resolve(distDir, dir);
+        } else if (bundleFile) {
+          const bundleDir = path.dirname(bundleFile);
+          distDir = path.isAbsolute(bundleDir)
+            ? bundleDir
+            : path.resolve(distDir, bundleDir);
+        }
+
+        htmlFileName = path.basename(template);
+        if (path.resolve(distDir, htmlFileName) === path.resolve(template)) {
+          this.error(
+            "Could't write the generated HTML to the source template, \
+define one of the options: `file`, `output.file` or `output.dir`",
+          );
+        }
+      }
+      const modulesSupport = !!format && /^(esm?|module)$/.test(format);
+      const checkModules = (e: Entry | External) => {
+        if (e.type == "module") {
+          if (e.tag === "script" && e.nomodule) {
+            this.error(
+              'One or more entries or externals have \
+the `nomodule` option enabled and `type` set to "module"',
+            );
+          }
+          if (!modulesSupport) {
+            this.error(`One or more entries or externals have \
+the \`type\` option set to "module" but the \`output.format\` \
+is ${JSON.stringify(format)}, consider to use another format \
+or change the \`type\``);
+          }
+        }
+      };
+      Object.values(entries).forEach(checkModules);
+      const { before = [], after = [] } = externals || {};
+      before.forEach(checkModules);
+      after.forEach(checkModules);
+      return null;
+    },
+
+    async generateBundle(output, bundle): Promise<void> {
+      const data = templateIsFile
+        ? await fs.readFile(template, { encoding: "utf-8" })
+        : template;
+
+      const doc = parse(data, { comment: true });
+      const html = doc.querySelector("html");
+      if (!html) {
+        this.error("The input template does not contain the `html` tag");
+      }
+
+      const head = getChildElement(html, "head", false);
+      const body = getChildElement(html, "body");
+
+      if (meta) {
+        const nodes = head.querySelectorAll("meta");
+        for (const [name, content] of Object.entries(meta)) {
+          const oldMeta = nodes.find((n) => n.attributes.name === name);
+          const newMeta = new HTMLElement(
+            "meta",
+            {},
+            `name="${name}" content="${content}"`,
+            head,
+            [-1, -1],
+          );
+          if (oldMeta) {
+            head.exchangeChild(oldMeta, newMeta);
+          } else {
+            addNewLine(head);
+            head.appendChild(newMeta);
+          }
+        }
+      }
+
+      // Inject favicons from the [rollup-plugin-favicons](https://github.com/mentaljam/rollup-plugin-favicons)
+      const { __favicons_output: favicons = [] } = output as ExtendedOptions;
+      for (const f of favicons) {
+        head.appendChild(new TextNode(f, head));
+        addNewLine(head);
+      }
+
+      if (title) {
+        let node = head.querySelector("title");
+        if (!node) {
+          addNewLine(head);
+          node = new HTMLElement("title", {}, "", head, [-1, -1]);
+          head.appendChild(node);
+        }
+        node.set_content(title);
+      }
+
+      const prefix = normalizePrefix(onlinePath);
+
+      const appendNode = appendNodeFactory(
+        this,
+        head,
+        inject === "head" ? head : body,
+      );
+
+      const processExternal = (e: External) => {
+        if (!e.tag) {
+          this.error(
+            "`tag` property must be defined explicitly for `externals`",
+          );
+        }
+        appendNode(e);
+      };
+      const { before = [], after = [] } = externals || {};
+
+      // Inject externals before
+      before.forEach(processExternal);
+
+      // Inject generated files
+      if (inject) {
+        if (Array.isArray(exclude)) {
+          exclude = new Set(exclude);
+        }
+        for (const file of Object.values(bundle)) {
+          const { name, fileName } = file;
+          if (!name || !exclude.has(name)) {
+            const filePath = prefix + fileName;
+            const options = name ? entries[name] : undefined;
+            if (options || !isChunk(file) || file.isEntry) {
+              appendNode(options, filePath);
+            }
+          }
+        }
+      }
+
+      if (favicon) {
+        const nodes = head.querySelectorAll("link");
+        const rel = "shortcut icon";
+        const oldLink = nodes.find((n) => n.attributes.rel === rel);
+        const fileName = path.basename(favicon);
+        const filePath = prefix + fileName;
+        const newLink = new HTMLElement(
+          "link",
+          {},
+          `rel="${rel}" href="${filePath}"`,
+          head,
+          [-1, -1],
+        );
+        if (oldLink) {
+          head.exchangeChild(oldLink, newLink);
+        } else {
+          addNewLine(head);
+          head.appendChild(newLink);
+        }
+        this.emitFile({
+          fileName,
+          source: await fs.readFile(favicon),
+          type: "asset",
+        });
+      }
+
+      // Inject externals after
+      after.forEach(processExternal);
+
+      let source = doc.toString();
+
+      if (minifyOptions) {
+        source = await minify(source, minifyOptions);
+      }
+
+      // `file` has been checked in the `outputOptions` hook
       this.emitFile({
-        fileName,
-        source: await fs.readFile(favicon),
+        fileName: htmlFileName,
+        source,
         type: "asset",
       });
-    }
-
-    // Inject externals after
-    after.forEach(processExternal);
-
-    let source = doc.toString();
-
-    if (minifyOptions) {
-      source = await minify(source, minifyOptions);
-    }
-
-    // `file` has been checked in the `outputOptions` hook
-    this.emitFile({
-      fileName: htmlFileName,
-      source,
-      type: "asset",
-    });
-  },
-});
+    },
+  };
+};
 
 /**
  * Interface for the extended output options
