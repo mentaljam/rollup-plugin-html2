@@ -439,6 +439,7 @@ or change the \`type\``);
       if (!node) {
         addNewLine(head);
         node = new HTMLElement("title", {}, "", head, [-1, -1]);
+        head.appendChild(node);
       }
       node.set_content(title);
     }
